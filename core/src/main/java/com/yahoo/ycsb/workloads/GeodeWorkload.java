@@ -1,9 +1,14 @@
 package com.yahoo.ycsb.workloads;
 
+import com.gemstone.gemfire.InvalidDeltaException;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
 import com.yahoo.ycsb.measurements.Measurements;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -348,57 +353,168 @@ public class GeodeWorkload extends Workload {
     return prekey + value;
   }
 
-  public class UE {
-    /**
-     *  Static entity codes, will never change in this benchmark.
-     */
-    public static final String MNC = "244";
-    public static final String MCC = "921";
-    public static final String PLMN_ID = MNC + MCC;
-    public static final String MMEGI = "M";
-    public static final String MMEC = "C";
-    public static final String MMEI = MMEGI + MMEC;
-    public static final String GUMMEI = PLMN_ID + MMEI;
-    public static final String PGW_ID = "ubiquitous.internet";
+}
 
-    /**
-     *  Semi-static entity codes. Once generated on insert, will not be changed.
-     */
-    public String IMEI;
-    public String MSIN;
-    public String IMSI = PLMN_ID + MSIN;
-    public String EPS_KEY;
-    public String Cipher_KEY;
-    public String Encryption_KEY;
+class UE implements com.gemstone.gemfire.Delta, Serializable {
+  /**
+   *  Static entity codes, will never change in this benchmark.
+   */
+  public static final String MNC = "244";
+  public static final String MCC = "921";
+  public static final String PLMN_ID = MNC + MCC;
+  public static final String MMEGI = "M";
+  public static final String MMEC = "C";
+  public static final String MMEI = MMEGI + MMEC;
+  public static final String GUMMEI = PLMN_ID + MMEI;
+  public static final String PGW_ID = "ubiquitous.internet";
 
-    public int M_TMSI;
-    public String GUTI = GUMMEI + M_TMSI;
-    public int IP;
-    public short C_RNTI;
-    public int eNB_UE_S1AP;
-    public int MME_YE_S1AP;
-    public int OLD_eNB_UE_X2;
-    public int NEW_eNB_UE_X2;
-    public int ECI;
-    public String ECGI = PLMN_ID + ECI;
-    public int TAI;
-    public List<Integer> TAI_list;
-    public String PDN_ID;
-    public byte EPS_bearer;
-    public byte E_RA_bearer;
-    public byte DR_bearer;
-    public int S1_TEID_UL;
-    public int S1_TEID_DL;
-    public int S5_TEID_UL;
-    public int S5_TEID_DL;
+  /**
+   *  Semi-static entity codes. Once generated on insert, will not be changed.
+   */
+  public String IMEI;
+  public String MSIN;
+  public String IMSI; // = PLMN_ID + MSIN;
+  public String EPS_KEY;
+  public String Cipher_KEY;
+  public String Encryption_KEY;
 
-    public String K_ASME;
-    public String K_ENB;
-    public String K_NASint;
-    public String K_NASenc;
-    public String K_RRCint;
-    public String K_RRCenc;
-    public String K_UPenc;
+  /**
+   *  Dynamic entities, will experience change on a regular basis.
+   */
+  public int M_TMSI;
+  public String GUTI; // = GUMMEI + M_TMSI;
+  public int IP;
+  public short C_RNTI;
+  public int eNB_UE_S1AP;
+  public int MME_YE_S1AP;
+  public int OLD_eNB_UE_X2;
+  public int NEW_eNB_UE_X2;
+  public int ECI;
+  public String ECGI; // = PLMN_ID + ECI;
+  public int TAI;
+  public List<Integer> TAI_list;
+  public String PDN_ID;
+  public byte EPS_bearer;
+  public byte E_RA_bearer;
+  public byte DR_bearer;
+  public int S1_TEID_UL;
+  public int S1_TEID_DL;
+  public int S5_TEID_UL;
+  public int S5_TEID_DL;
+  public String K_ASME;
+  public String K_ENB;
+  public String K_NASint;
+  public String K_NASenc;
+  public String K_RRCint;
+  public String K_RRCenc;
+  public String K_UPenc;
+
+  /**
+   * The transients to support deltas.
+   */
+  public transient boolean master_ch;
+  public transient boolean M_TMSI_ch;
+  public transient boolean GUTI_ch;
+  public transient boolean IP_ch;
+  public transient boolean C_RNTI_ch;
+  public transient boolean eNB_UE_S1AP_ch;
+  public transient boolean MME_YE_S1AP_ch;
+  public transient boolean OLD_eNB_UE_X2_ch;
+  public transient boolean NEW_eNB_UE_X2_ch;
+  public transient boolean ECI_ch;
+  public transient boolean ECGI_ch;
+  public transient boolean TAI_ch;
+  public transient boolean TAI_list_ch;
+  public transient boolean PDN_ID_ch;
+  public transient boolean EPS_bearer_ch;
+  public transient boolean E_RA_bearer_ch;
+  public transient boolean DR_bearer_ch;
+  public transient boolean S1_TEID_UL_ch;
+  public transient boolean S1_TEID_DL_ch;
+  public transient boolean S5_TEID_UL_ch;
+  public transient boolean S5_TEID_DL_ch;
+  public transient boolean K_ASME_ch;
+  public transient boolean K_ENB_ch;
+  public transient boolean K_NASint_ch;
+  public transient boolean K_NASenc_ch;
+  public transient boolean K_RRCint_ch;
+  public transient boolean K_RRCenc_ch;
+  public transient boolean K_UPenc_ch;
+
+  public UE(String IMEI, String MSIN, String EPS_KEY, String cipher_KEY, String encryption_KEY) {
+    this.IMEI = IMEI;
+    this.MSIN = MSIN;
+    this.IMSI = PLMN_ID + MSIN;
+    this.EPS_KEY = EPS_KEY;
+    this.Cipher_KEY = cipher_KEY;
+    this.Encryption_KEY = encryption_KEY;
+  }
+
+  @Override
+  public boolean hasDelta() {
+    return master_ch;
+  }
+
+  @Override
+  public void toDelta(DataOutput out) throws IOException {
+    out.writeBoolean(M_TMSI_ch);
+    if (M_TMSI_ch) { out.writeInt(M_TMSI); this.M_TMSI_ch = false; }
+    out.writeBoolean(GUTI_ch);
+    if (GUTI_ch) { out.writeBytes(GUTI); this.GUTI_ch = false; }
+    out.writeBoolean(IP_ch);
+    if (IP_ch) { out.writeInt(IP); this.IP_ch = false; }
+    out.writeBoolean(C_RNTI_ch);
+    if (C_RNTI_ch) { out.writeShort(C_RNTI); this.C_RNTI_ch = false; }
+    out.writeBoolean(eNB_UE_S1AP_ch);
+    if (eNB_UE_S1AP_ch) { out.writeInt(eNB_UE_S1AP); this.eNB_UE_S1AP_ch = false; }
+    out.writeBoolean(MME_YE_S1AP_ch);
+    if (MME_YE_S1AP_ch) { out.writeInt(MME_YE_S1AP); this.MME_YE_S1AP_ch = false; }
+    out.writeBoolean(OLD_eNB_UE_X2_ch);
+    if (OLD_eNB_UE_X2_ch) { out.writeInt(OLD_eNB_UE_X2); this.OLD_eNB_UE_X2_ch = false; }
+    out.writeBoolean(NEW_eNB_UE_X2_ch);
+    if (NEW_eNB_UE_X2_ch) { out.writeInt(NEW_eNB_UE_X2); this.NEW_eNB_UE_X2_ch = false; }
+    out.writeBoolean(ECI_ch);
+    if (ECI_ch) { out.writeInt(ECI); this.ECI_ch = false; }
+    out.writeBoolean(ECGI_ch);
+    if (ECGI_ch) { out.writeBytes(ECGI); this.ECGI_ch = false; }
+    out.writeBoolean(TAI_ch);
+    if (TAI_ch) { out.writeInt(TAI); this.TAI_ch = false; }
+    out.writeBoolean(TAI_list_ch);
+    if (TAI_list_ch) { out.writeInt(TAI_list.size()); for (int TAI:TAI_list) out.writeInt(TAI); this.TAI_list_ch = false; }
+    out.writeBoolean(PDN_ID_ch);
+    if (PDN_ID_ch) { out.writeBytes(PDN_ID); this.PDN_ID_ch = false; }
+    out.writeBoolean(EPS_bearer_ch);
+    if (EPS_bearer_ch) { out.writeByte(EPS_bearer); this.EPS_bearer_ch = false; }
+    out.writeBoolean(E_RA_bearer_ch);
+    if (E_RA_bearer_ch) { out.writeByte(E_RA_bearer); this.E_RA_bearer_ch = false; }
+    out.writeBoolean(DR_bearer_ch);
+    if (DR_bearer_ch) { out.writeByte(DR_bearer); this.DR_bearer_ch = false; }
+    out.writeBoolean(S1_TEID_DL_ch);
+    if (S1_TEID_DL_ch) { out.writeInt(S1_TEID_DL); this.S1_TEID_DL_ch = false; }
+    out.writeBoolean(S1_TEID_UL_ch);
+    if (S1_TEID_UL_ch) { out.writeInt(S1_TEID_UL); this.S1_TEID_UL_ch = false; }
+    out.writeBoolean(S5_TEID_DL_ch);
+    if (S5_TEID_DL_ch) { out.writeInt(S5_TEID_DL); this.S5_TEID_DL_ch = false; }
+    out.writeBoolean(S5_TEID_UL_ch);
+    if (S5_TEID_UL_ch) { out.writeInt(S5_TEID_UL); this.S5_TEID_UL_ch = false; }
+    out.writeBoolean(K_ASME_ch);
+    if (K_ASME_ch) { out.writeBytes(K_ASME); this.K_ASME_ch = false; }
+    out.writeBoolean(K_ENB_ch);
+    if (K_ENB_ch) { out.writeBytes(K_ENB); this.K_ENB_ch = false; }
+    out.writeBoolean(K_NASint_ch);
+    if (K_NASint_ch) { out.writeBytes(K_NASint); this.K_NASint_ch = false; }
+    out.writeBoolean(K_NASenc_ch);
+    if (K_NASenc_ch) { out.writeBytes(K_NASenc); this.K_NASenc_ch = false; }
+    out.writeBoolean(K_RRCint_ch);
+    if (K_RRCint_ch) { out.writeBytes(K_RRCint); this.K_RRCint_ch = false; }
+    out.writeBoolean(K_RRCenc_ch);
+    if (K_RRCenc_ch) { out.writeBytes(K_RRCenc); this.K_RRCenc_ch = false; }
+    out.writeBoolean(K_UPenc_ch);
+    if (K_UPenc_ch) { out.writeBytes(K_UPenc); this.K_UPenc_ch = false; }
+  }
+
+  @Override
+  public void fromDelta(DataInput in) throws IOException, InvalidDeltaException {
 
   }
 }
