@@ -1,9 +1,6 @@
 package com.yahoo.ycsb.workloads;
 
-import com.yahoo.ycsb.Client;
-import com.yahoo.ycsb.DB;
-import com.yahoo.ycsb.Workload;
-import com.yahoo.ycsb.WorkloadException;
+import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
 import com.yahoo.ycsb.measurements.Measurements;
 
@@ -22,15 +19,6 @@ public class GeodeWorkload extends Workload {
   public static final String TABLENAME_PROPERTY = "table";
   public static final String TABLENAME_PROPERTY_DEFAULT = "usertable";
   public static String table;
-
-
-  /**
-   * The name of the property for the number of fields in a record.
-   */
-  public static final String FIELD_COUNT_PROPERTY = "fieldcount";
-  public static final String FIELD_COUNT_PROPERTY_DEFAULT = "10";
-  int fieldcount;
-  private List<String> fieldnames;
 
   /**
    * The name of the property for the field length distribution. Options are "uniform", "zipfian"
@@ -180,6 +168,8 @@ public class GeodeWorkload extends Workload {
   public static final String INSERTION_RETRY_INTERVAL = "core_workload_insertion_retry_interval";
   public static final String INSERTION_RETRY_INTERVAL_DEFAULT = "3";
 
+
+
   NumberGenerator keysequence;
 
   DiscreteGenerator operationchooser;
@@ -275,8 +265,6 @@ public class GeodeWorkload extends Workload {
       throw new WorkloadException("Unknown request distribution \"" + requestdistrib + "\"");
     }
 
-    fieldchooser = new UniformIntegerGenerator(0, fieldcount - 1);
-
     insertionRetryLimit = Integer.parseInt(p.getProperty(INSERTION_RETRY_LIMIT, INSERTION_RETRY_LIMIT_DEFAULT));
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
   }
@@ -288,6 +276,8 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doInsert(DB db, Object threadstate) {
+    int keynum = keysequence.nextValue().intValue();
+    String dbkey = buildKeyName(keynum);
     return false;
   }
 
@@ -343,5 +333,72 @@ public class GeodeWorkload extends Workload {
       operationchooser.addValue(readmodifywriteproportion, "READMODIFYWRITE");
     }
     return operationchooser;
+  }
+
+  public String buildKeyName(long keynum) {
+    if (!orderedinserts) {
+      keynum = Utils.hash(keynum);
+    }
+    String value = Long.toString(keynum);
+    int fill = zeropadding - value.length();
+    String prekey = "user";
+    for(int i=0; i<fill; i++) {
+      prekey += '0';
+    }
+    return prekey + value;
+  }
+
+  public class UE {
+    /**
+     *  Static entity codes, will never change in this benchmark.
+     */
+    public static final String MNC = "244";
+    public static final String MCC = "921";
+    public static final String PLMN_ID = MNC + MCC;
+    public static final String MMEGI = "M";
+    public static final String MMEC = "C";
+    public static final String MMEI = MMEGI + MMEC;
+    public static final String GUMMEI = PLMN_ID + MMEI;
+    public static final String PGW_ID = "ubiquitous.internet";
+
+    /**
+     *  Semi-static entity codes. Once generated on insert, will not be changed.
+     */
+    public String IMEI;
+    public String MSIN;
+    public String IMSI = PLMN_ID + MSIN;
+    public String EPS_KEY;
+    public String Cipher_KEY;
+    public String Encryption_KEY;
+
+    public int M_TMSI;
+    public String GUTI = GUMMEI + M_TMSI;
+    public int IP;
+    public short C_RNTI;
+    public int eNB_UE_S1AP;
+    public int MME_YE_S1AP;
+    public int OLD_eNB_UE_X2;
+    public int NEW_eNB_UE_X2;
+    public int ECI;
+    public String ECGI = PLMN_ID + ECI;
+    public int TAI;
+    public List<Integer> TAI_list;
+    public String PDN_ID;
+    public byte EPS_bearer;
+    public byte E_RA_bearer;
+    public byte DR_bearer;
+    public int S1_TEID_UL;
+    public int S1_TEID_DL;
+    public int S5_TEID_UL;
+    public int S5_TEID_DL;
+
+    public String K_ASME;
+    public String K_ENB;
+    public String K_NASint;
+    public String K_NASenc;
+    public String K_RRCint;
+    public String K_RRCenc;
+    public String K_UPenc;
+
   }
 }
