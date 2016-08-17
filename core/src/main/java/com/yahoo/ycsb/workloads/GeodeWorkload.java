@@ -87,34 +87,38 @@ public class GeodeWorkload extends Workload {
   private boolean dataintegrity;
 
   /**
-   * The name of the property for the proportion of transactions that are reads.
-   */
-  public static final String READ_PROPORTION_PROPERTY = "readproportion";
-  public static final String READ_PROPORTION_PROPERTY_DEFAULT = "0.95";
-
-  /**
-   * The name of the property for the proportion of transactions that are updates.
-   */
-  public static final String UPDATE_PROPORTION_PROPERTY = "updateproportion";
-  public static final String UPDATE_PROPORTION_PROPERTY_DEFAULT = "0.05";
-
-  /**
    * The name of the property for the proportion of transactions that are inserts.
    */
   public static final String INSERT_PROPORTION_PROPERTY = "insertproportion";
   public static final String INSERT_PROPORTION_PROPERTY_DEFAULT = "0.0";
 
   /**
-   * The name of the property for the proportion of transactions that are scans.
+   * LTE event specific properties
    */
-  public static final String SCAN_PROPORTION_PROPERTY = "scanproportion";
-  public static final String SCAN_PROPORTION_PROPERTY_DEFAULT = "0.0";
-
-  /**
-   * The name of the property for the proportion of transactions that are read-modify-write.
-   */
-  public static final String READMODIFYWRITE_PROPORTION_PROPERTY = "readmodifywriteproportion";
-  public static final String READMODIFYWRITE_PROPORTION_PROPERTY_DEFAULT = "0.0";
+  public static final String ATTACH_PROPORTION_PROPERTY = "attach_proportion";
+  public static final String ATTACH_PROPORTION_PROPERTY_DEFAULT = "0.01";
+  public static final String ATTACH_OPERATION = "ATTACH";
+  public static final String DETACH_PROPORTION_PROPERTY = "detach_proportion";
+  public static final String DETACH_PROPORTION_PROPERTY_DEFAULT = "0.01";
+  public static final String DETACH_OPERATION = "DETACH";
+  public static final String SERVICE_REQUEST_PROPORTION_PROPERTY = "service_request_proportion";
+  public static final String SERVICE_REQUEST_PROPORTION_PROPERTY_DEFAULT = "0.31";
+  public static final String SERVICE_REQUEST_OPERATION = "SERVICE_REQUEST";
+  public static final String S1_RELEASE_PROPORTION_PROPERTY = "s1_release_proportion";
+  public static final String S1_RELEASE_PROPORTION_PROPERTY_DEFAULT = "0.31";
+  public static final String S1_RELEASE_OPERATION = "S1_RELEASE";
+  public static final String TAU_PROPORTION_PROPERTY = "tau_proportion";
+  public static final String TAU_PROPORTION_PROPERTY_DEFAULT = "0.09";
+  public static final String TAU_OPERATION = "TAU";
+  public static final String HANDOVER_PROPORTION_PROPERTY = "handover_proportion";
+  public static final String HANDOVER_PROPORTION_PROPERTY_DEFAULT = "0.12";
+  public static final String HANDOVER_OPERATION = "HANDOVER";
+  public static final String CELL_RESELECT_PROPORTION_PROPERTY = "cell_reselect_proportion";
+  public static final String CELL_RESELECT_PROPORTION_PROPERTY_DEFAULT = "0.07";
+  public static final String CELL_RESELECT_OPERATION = "CELL_RESELECT";
+  public static final String SESSION_MANAGEMENT_PROPORTION_PROPERTY = "session_management_proportion";
+  public static final String SESSION_MANAGEMENT_PROPORTION_PROPERTY_DEFAULT = "0.07";
+  public static final String SESSION_MANAGEMENT_OPERATION = "SESSION_MANAGEMENT";
 
   /**
    * The name of the property for the the distribution of requests across the keyspace. Options are
@@ -239,7 +243,6 @@ public class GeodeWorkload extends Workload {
       orderedinserts = true;
     }
 
-    keysequence = new CounterGenerator(insertstart);
     operationchooser = createOperationGenerator(p);
     transactioninsertkeysequence = new AcknowledgedCounterGenerator(recordcount);
 
@@ -282,14 +285,45 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doInsert(DB db, Object threadstate) {
-    int keynum = keysequence.nextValue().intValue();
-    String dbkey = buildKeyName(keynum);
+
     return false;
   }
 
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
-    return false;
+    switch (operationchooser.nextString()) {
+      case ATTACH_OPERATION:
+
+        break;
+      case DETACH_OPERATION:
+
+        break;
+      case SERVICE_REQUEST_OPERATION:
+
+        break;
+      case S1_RELEASE_OPERATION:
+
+        break;
+      case TAU_OPERATION:
+
+        break;
+      case HANDOVER_OPERATION:
+
+        break;
+      case CELL_RESELECT_OPERATION:
+
+        break;
+      case SESSION_MANAGEMENT_OPERATION:
+
+        break;
+      case "INSERT":
+
+        break;
+      default:
+        // detach
+    }
+
+    return true;
   }
 
   @Override
@@ -312,46 +346,28 @@ public class GeodeWorkload extends Workload {
     if (p == null) {
       throw new IllegalArgumentException("Properties object cannot be null");
     }
-    final double readproportion = Double.parseDouble(p.getProperty(READ_PROPORTION_PROPERTY, READ_PROPORTION_PROPERTY_DEFAULT));
-    final double updateproportion = Double.parseDouble(p.getProperty(UPDATE_PROPORTION_PROPERTY, UPDATE_PROPORTION_PROPERTY_DEFAULT));
     final double insertproportion = Double.parseDouble(p.getProperty(INSERT_PROPORTION_PROPERTY, INSERT_PROPORTION_PROPERTY_DEFAULT));
-    final double scanproportion = Double.parseDouble(p.getProperty(SCAN_PROPORTION_PROPERTY, SCAN_PROPORTION_PROPERTY_DEFAULT));
-    final double readmodifywriteproportion = Double.parseDouble(p.getProperty(READMODIFYWRITE_PROPORTION_PROPERTY, READMODIFYWRITE_PROPORTION_PROPERTY_DEFAULT));
+    final double attachproportion = Double.parseDouble(p.getProperty(ATTACH_PROPORTION_PROPERTY, ATTACH_PROPORTION_PROPERTY_DEFAULT));
+    final double detachproportion = Double.parseDouble(p.getProperty(DETACH_PROPORTION_PROPERTY, DETACH_PROPORTION_PROPERTY_DEFAULT));
+    final double servicerequestproportion = Double.parseDouble(p.getProperty(SERVICE_REQUEST_PROPORTION_PROPERTY, SERVICE_REQUEST_PROPORTION_PROPERTY_DEFAULT));
+    final double s1releaseproportion = Double.parseDouble(p.getProperty(S1_RELEASE_PROPORTION_PROPERTY, S1_RELEASE_PROPORTION_PROPERTY_DEFAULT));
+    final double tauproprotion = Double.parseDouble(p.getProperty(TAU_PROPORTION_PROPERTY, TAU_PROPORTION_PROPERTY_DEFAULT));
+    final double handoverproportion = Double.parseDouble(p.getProperty(HANDOVER_PROPORTION_PROPERTY, HANDOVER_PROPORTION_PROPERTY_DEFAULT));
+    final double cellreselectionproportion = Double.parseDouble(p.getProperty(CELL_RESELECT_PROPORTION_PROPERTY, CELL_RESELECT_PROPORTION_PROPERTY_DEFAULT));
+    final double sessionmanagementproportion = Double.parseDouble(p.getProperty(SESSION_MANAGEMENT_PROPORTION_PROPERTY, SESSION_MANAGEMENT_PROPORTION_PROPERTY_DEFAULT));
 
     final DiscreteGenerator operationchooser = new DiscreteGenerator();
-    if (readproportion > 0) {
-      operationchooser.addValue(readproportion, "READ");
-    }
+    if (attachproportion > 0) operationchooser.addValue(attachproportion, ATTACH_OPERATION);
+    if (detachproportion > 0) operationchooser.addValue(detachproportion, DETACH_OPERATION);
+    if (servicerequestproportion > 0) operationchooser.addValue(servicerequestproportion, SERVICE_REQUEST_OPERATION);
+    if (s1releaseproportion > 0) operationchooser.addValue(s1releaseproportion, S1_RELEASE_OPERATION);
+    if (tauproprotion > 0) operationchooser.addValue(tauproprotion, TAU_OPERATION);
+    if (handoverproportion > 0) operationchooser.addValue(handoverproportion, HANDOVER_OPERATION);
+    if (cellreselectionproportion > 0) operationchooser.addValue(cellreselectionproportion, CELL_RESELECT_OPERATION);
+    if (sessionmanagementproportion > 0) operationchooser.addValue(sessionmanagementproportion, SESSION_MANAGEMENT_OPERATION);
+    if (insertproportion > 0) operationchooser.addValue(insertproportion, "INSERT");
 
-    if (updateproportion > 0) {
-      operationchooser.addValue(updateproportion, "UPDATE");
-    }
-
-    if (insertproportion > 0) {
-      operationchooser.addValue(insertproportion, "INSERT");
-    }
-
-    if (scanproportion > 0) {
-      operationchooser.addValue(scanproportion, "SCAN");
-    }
-
-    if (readmodifywriteproportion > 0) {
-      operationchooser.addValue(readmodifywriteproportion, "READMODIFYWRITE");
-    }
     return operationchooser;
-  }
-
-  public String buildKeyName(long keynum) {
-    if (!orderedinserts) {
-      keynum = Utils.hash(keynum);
-    }
-    String value = Long.toString(keynum);
-    int fill = zeropadding - value.length();
-    String prekey = "user";
-    for(int i=0; i<fill; i++) {
-      prekey += '0';
-    }
-    return prekey + value;
   }
 
 }
