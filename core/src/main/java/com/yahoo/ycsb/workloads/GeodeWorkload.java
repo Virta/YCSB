@@ -359,87 +359,87 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
   /**
    *  Static entity codes, will never change in this benchmark.
    */
-  public static final String MNC = "244";
-  public static final String MCC = "921";
-  public static final String PLMN_ID = MNC + MCC;
-  public static final String MMEGI = "M";
-  public static final String MMEC = "C";
-  public static final String MMEI = MMEGI + MMEC;
+  private static final String MNC = "244";
+  private static final String MCC = "921";
+  private static final String PLMN_ID = MNC + MCC;
+  private static final String MMEGI = "M";
+  private static final String MMEC = "C";
+  private static final String MMEI = MMEGI + MMEC;
   public static final String GUMMEI = PLMN_ID + MMEI;
   public static final String PGW_ID = "ubiquitous.internet";
 
   /**
    *  Semi-static entity codes. Once generated on insert, will not be changed.
    */
-  public String IMEI;
-  public String MSIN;
-  public String IMSI; // = PLMN_ID + MSIN;
-  public String EPS_KEY;
-  public String Cipher_KEY;
-  public String Encryption_KEY;
+  private String IMEI;
+  private String MSIN;
+  private String IMSI; // = PLMN_ID + MSIN;
+  private String EPS_KEY; // = 128 bit (8 chars)
+  private String Cipher_KEY; // = 128 bit
+  private String Encryption_KEY; // = 128 bit
 
   /**
    *  Dynamic entities, will experience change on a regular basis.
    */
-  public int M_TMSI;
-  public String GUTI; // = GUMMEI + M_TMSI;
-  public int IP;
-  public short C_RNTI;
-  public int eNB_UE_S1AP;
-  public int MME_YE_S1AP;
-  public int OLD_eNB_UE_X2;
-  public int NEW_eNB_UE_X2;
-  public int ECI;
-  public String ECGI; // = PLMN_ID + ECI;
-  public int TAI;
-  public List<Integer> TAI_list;
-  public String PDN_ID;
-  public byte EPS_bearer;
-  public byte E_RA_bearer;
-  public byte DR_bearer;
-  public int S1_TEID_UL;
-  public int S1_TEID_DL;
-  public int S5_TEID_UL;
-  public int S5_TEID_DL;
-  public String K_ASME;
-  public String K_ENB;
-  public String K_NASint;
-  public String K_NASenc;
-  public String K_RRCint;
-  public String K_RRCenc;
-  public String K_UPenc;
+  private int M_TMSI;
+  private String GUTI; // = GUMMEI + M_TMSI;
+  private int IP;
+  private short C_RNTI;
+  private int eNB_UE_S1AP;
+  private int MME_YE_S1AP;
+  private int OLD_eNB_UE_X2;
+  private int NEW_eNB_UE_X2;
+  private int ECI;
+  private String ECGI; // = PLMN_ID + ECI;
+  private int TAI;
+  private List<Integer> TAI_list;
+  private String PDN_ID;
+  private byte EPS_bearer;
+  private byte E_RA_bearer;
+  private byte DR_bearer;
+  private int S1_TEID_UL;
+  private int S1_TEID_DL;
+  private int S5_TEID_UL;
+  private int S5_TEID_DL;
+  private String K_ASME; // = 256 bit (16 chars)
+  private String K_ENB; // = 256 bit
+  private String K_NASint; // = 256 bit
+  private String K_NASenc; // = 256 bit
+  private String K_RRCint; // = 256 bit
+  private String K_RRCenc; // = 256 bit
+  private String K_UPenc; // = 256 bit
 
   /**
    * The transients to support deltas.
    */
-  public transient boolean master_ch;
-  public transient boolean M_TMSI_ch;
-  public transient boolean GUTI_ch;
-  public transient boolean IP_ch;
-  public transient boolean C_RNTI_ch;
-  public transient boolean eNB_UE_S1AP_ch;
-  public transient boolean MME_YE_S1AP_ch;
-  public transient boolean OLD_eNB_UE_X2_ch;
-  public transient boolean NEW_eNB_UE_X2_ch;
-  public transient boolean ECI_ch;
-  public transient boolean ECGI_ch;
-  public transient boolean TAI_ch;
-  public transient boolean TAI_list_ch;
-  public transient boolean PDN_ID_ch;
-  public transient boolean EPS_bearer_ch;
-  public transient boolean E_RA_bearer_ch;
-  public transient boolean DR_bearer_ch;
-  public transient boolean S1_TEID_UL_ch;
-  public transient boolean S1_TEID_DL_ch;
-  public transient boolean S5_TEID_UL_ch;
-  public transient boolean S5_TEID_DL_ch;
-  public transient boolean K_ASME_ch;
-  public transient boolean K_ENB_ch;
-  public transient boolean K_NASint_ch;
-  public transient boolean K_NASenc_ch;
-  public transient boolean K_RRCint_ch;
-  public transient boolean K_RRCenc_ch;
-  public transient boolean K_UPenc_ch;
+  private transient boolean master_ch;
+  private transient boolean M_TMSI_ch;
+  private transient boolean GUTI_ch;
+  private transient boolean IP_ch;
+  private transient boolean C_RNTI_ch;
+  private transient boolean eNB_UE_S1AP_ch;
+  private transient boolean MME_YE_S1AP_ch;
+  private transient boolean OLD_eNB_UE_X2_ch;
+  private transient boolean NEW_eNB_UE_X2_ch;
+  private transient boolean ECI_ch;
+  private transient boolean ECGI_ch;
+  private transient boolean TAI_ch;
+  private transient boolean TAI_list_ch;
+  private transient boolean PDN_ID_ch;
+  private transient boolean EPS_bearer_ch;
+  private transient boolean E_RA_bearer_ch;
+  private transient boolean DR_bearer_ch;
+  private transient boolean S1_TEID_UL_ch;
+  private transient boolean S1_TEID_DL_ch;
+  private transient boolean S5_TEID_UL_ch;
+  private transient boolean S5_TEID_DL_ch;
+  private transient boolean K_ASME_ch;
+  private transient boolean K_ENB_ch;
+  private transient boolean K_NASint_ch;
+  private transient boolean K_NASenc_ch;
+  private transient boolean K_RRCint_ch;
+  private transient boolean K_RRCenc_ch;
+  private transient boolean K_UPenc_ch;
 
   public UE(String IMEI, String MSIN, String EPS_KEY, String cipher_KEY, String encryption_KEY) {
     this.IMEI = IMEI;
@@ -448,6 +448,10 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
     this.EPS_KEY = EPS_KEY;
     this.Cipher_KEY = cipher_KEY;
     this.Encryption_KEY = encryption_KEY;
+  }
+
+  public void initial_attach() {
+
   }
 
   @Override
@@ -460,7 +464,7 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
     out.writeBoolean(M_TMSI_ch);
     if (M_TMSI_ch) { out.writeInt(M_TMSI); this.M_TMSI_ch = false; }
     out.writeBoolean(GUTI_ch);
-    if (GUTI_ch) { out.writeBytes(GUTI); this.GUTI_ch = false; }
+    if (GUTI_ch) { out.writeUTF(GUTI); this.GUTI_ch = false; }
     out.writeBoolean(IP_ch);
     if (IP_ch) { out.writeInt(IP); this.IP_ch = false; }
     out.writeBoolean(C_RNTI_ch);
@@ -476,13 +480,13 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
     out.writeBoolean(ECI_ch);
     if (ECI_ch) { out.writeInt(ECI); this.ECI_ch = false; }
     out.writeBoolean(ECGI_ch);
-    if (ECGI_ch) { out.writeBytes(ECGI); this.ECGI_ch = false; }
+    if (ECGI_ch) { out.writeUTF(ECGI); this.ECGI_ch = false; }
     out.writeBoolean(TAI_ch);
     if (TAI_ch) { out.writeInt(TAI); this.TAI_ch = false; }
     out.writeBoolean(TAI_list_ch);
     if (TAI_list_ch) { out.writeInt(TAI_list.size()); for (int TAI:TAI_list) out.writeInt(TAI); this.TAI_list_ch = false; }
     out.writeBoolean(PDN_ID_ch);
-    if (PDN_ID_ch) { out.writeBytes(PDN_ID); this.PDN_ID_ch = false; }
+    if (PDN_ID_ch) { out.writeUTF(PDN_ID); this.PDN_ID_ch = false; }
     out.writeBoolean(EPS_bearer_ch);
     if (EPS_bearer_ch) { out.writeByte(EPS_bearer); this.EPS_bearer_ch = false; }
     out.writeBoolean(E_RA_bearer_ch);
@@ -498,23 +502,54 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
     out.writeBoolean(S5_TEID_UL_ch);
     if (S5_TEID_UL_ch) { out.writeInt(S5_TEID_UL); this.S5_TEID_UL_ch = false; }
     out.writeBoolean(K_ASME_ch);
-    if (K_ASME_ch) { out.writeBytes(K_ASME); this.K_ASME_ch = false; }
+    if (K_ASME_ch) { out.writeUTF(K_ASME); this.K_ASME_ch = false; }
     out.writeBoolean(K_ENB_ch);
-    if (K_ENB_ch) { out.writeBytes(K_ENB); this.K_ENB_ch = false; }
+    if (K_ENB_ch) { out.writeUTF(K_ENB); this.K_ENB_ch = false; }
     out.writeBoolean(K_NASint_ch);
-    if (K_NASint_ch) { out.writeBytes(K_NASint); this.K_NASint_ch = false; }
+    if (K_NASint_ch) { out.writeUTF(K_NASint); this.K_NASint_ch = false; }
     out.writeBoolean(K_NASenc_ch);
-    if (K_NASenc_ch) { out.writeBytes(K_NASenc); this.K_NASenc_ch = false; }
+    if (K_NASenc_ch) { out.writeUTF(K_NASenc); this.K_NASenc_ch = false; }
     out.writeBoolean(K_RRCint_ch);
-    if (K_RRCint_ch) { out.writeBytes(K_RRCint); this.K_RRCint_ch = false; }
+    if (K_RRCint_ch) { out.writeUTF(K_RRCint); this.K_RRCint_ch = false; }
     out.writeBoolean(K_RRCenc_ch);
-    if (K_RRCenc_ch) { out.writeBytes(K_RRCenc); this.K_RRCenc_ch = false; }
+    if (K_RRCenc_ch) { out.writeUTF(K_RRCenc); this.K_RRCenc_ch = false; }
     out.writeBoolean(K_UPenc_ch);
-    if (K_UPenc_ch) { out.writeBytes(K_UPenc); this.K_UPenc_ch = false; }
+    if (K_UPenc_ch) { out.writeUTF(K_UPenc); this.K_UPenc_ch = false; }
+    this.master_ch = false;
   }
 
   @Override
   public void fromDelta(DataInput in) throws IOException, InvalidDeltaException {
-
+    if (in.readBoolean()) this.M_TMSI = in.readInt();
+    if (in.readBoolean()) this.GUTI = in.readUTF();
+    if (in.readBoolean()) this.IP = in.readInt();
+    if (in.readBoolean()) this.C_RNTI = in.readShort();
+    if (in.readBoolean()) this.eNB_UE_S1AP = in.readInt();
+    if (in.readBoolean()) this.MME_YE_S1AP = in.readInt();
+    if (in.readBoolean()) this.OLD_eNB_UE_X2 = in.readInt();
+    if (in.readBoolean()) this.NEW_eNB_UE_X2 = in.readInt();
+    if (in.readBoolean()) this.ECI = in.readInt();
+    if (in.readBoolean()) this.ECGI = in.readUTF();
+    if (in.readBoolean()) this.TAI = in.readInt();
+    if (in.readBoolean()) {
+      int size = in.readInt();
+      this.TAI_list = new ArrayList<>();
+      for (int i = 0; i < size; i++) this.TAI_list.add(in.readInt());
+    }
+    if (in.readBoolean()) this.PDN_ID = in.readUTF();
+    if (in.readBoolean()) this.EPS_bearer = in.readByte();
+    if (in.readBoolean()) this.E_RA_bearer = in.readByte();
+    if (in.readBoolean()) this.DR_bearer = in.readByte();
+    if (in.readBoolean()) this.S1_TEID_DL = in.readInt();
+    if (in.readBoolean()) this.S1_TEID_UL = in.readInt();
+    if (in.readBoolean()) this.S5_TEID_DL = in.readInt();
+    if (in.readBoolean()) this.S5_TEID_UL = in.readInt();
+    if (in.readBoolean()) this.K_ASME = in.readUTF();
+    if (in.readBoolean()) this.K_ENB = in.readUTF();
+    if (in.readBoolean()) this.K_NASint = in.readUTF();
+    if (in.readBoolean()) this.K_NASenc = in.readUTF();
+    if (in.readBoolean()) this.K_RRCint = in.readUTF();
+    if (in.readBoolean()) this.K_RRCenc = in.readUTF();
+    if (in.readBoolean()) this.K_UPenc = in.readUTF();
   }
 }
