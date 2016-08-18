@@ -309,6 +309,7 @@ public class GeodeWorkload extends Workload {
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
     ueIDs = new ConcurrentHashMap<>(insertcount);
     random = new Random();
+    random.setSeed(System.currentTimeMillis());
   }
 
   @Override
@@ -430,7 +431,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doSessionManagement() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -443,7 +444,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doCellReSelection() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -456,7 +457,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doHandover() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -469,7 +470,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doTrackingAreaUpdate() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -482,7 +483,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doS1release() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -495,7 +496,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doServiceRequest() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -508,7 +509,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doDetach() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -521,7 +522,7 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doInitialAttach() {
-    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
@@ -828,7 +829,7 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
     String s = "";
     String hexa = "0123456789ABCDEF";
     for (int i = 0; i < chars; i++) {
-      s += hexa.charAt(rand.nextInt(15));
+      s += hexa.charAt(rand.nextInt(16));
     }
     return s;
   }
