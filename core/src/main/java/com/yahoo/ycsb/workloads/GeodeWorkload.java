@@ -7,7 +7,6 @@ import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionShortcut;
 import com.gemstone.gemfire.internal.admin.remote.DistributionLocatorId;
-import com.gemstone.gemfire.internal.concurrent.ConcurrentHashSet;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
 import com.yahoo.ycsb.measurements.Measurements;
@@ -17,6 +16,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by frojala on 16/08/16.
@@ -229,9 +229,10 @@ public class GeodeWorkload extends Workload {
   /** Keep the region object at hand so it does not have to be created each time, saves on time. */
   private Region<String, UE> ueRegion;
   /** Keep the inserted ueIDs at hand to prevent trying to add a UE with the same ID (IMSI). Also useful for choosing a random UE. */
-  private ConcurrentHashSet<String> ueIDs;
-
-
+  private ConcurrentHashMap<String, Boolean> ueIDs;
+  /** Keep the ueIDs as a list, so it can be indexed fast, used for choosing the next UE at random. */
+  private List<String> ueIDsAsList;
+  private Random random;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -306,7 +307,8 @@ public class GeodeWorkload extends Workload {
 
     insertionRetryLimit = Integer.parseInt(p.getProperty(INSERTION_RETRY_LIMIT, INSERTION_RETRY_LIMIT_DEFAULT));
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
-    ueIDs = new ConcurrentHashSet<>(insertcount);
+    ueIDs = new ConcurrentHashMap<>(insertcount);
+    random = new Random();
   }
 
   @Override
@@ -356,11 +358,11 @@ public class GeodeWorkload extends Workload {
   @Override
   public boolean doInsert(DB db, Object threadstate) {
     UE ue = new UE();
-    while (!ueIDs.add(ue.getIMSI())) ue = new UE();
+    while (!ueIDs.put(ue.getIMSI(), false)) ue = new UE();
     Status status;
     int numOfRetries = 0;
     do {
-      ueRegion.put(ue.getIMSI(), ue);
+      ueRegion.putIfAbsent(ue.getIMSI(), ue);
       status = Status.OK; // TODO: check if we can use the return value from the put above.
       if (status == Status.OK) {
         break;
@@ -391,6 +393,7 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
+    if (ueIDsAsList == null) ueIDsAsList = Collections.list(ueIDs.keys());
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
         doInitialAttach();
@@ -418,36 +421,116 @@ public class GeodeWorkload extends Workload {
         break;
       case "INSERT":
         doInsert(db, threadstate);
+        ueIDsAsList = Collections.list(ueIDs.keys());
         break;
       default:
         doDetach();
     }
-
     return true;
   }
 
   private void doSessionManagement() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.session_management();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start) );
   }
 
   private void doCellReSelection() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.cell_reselect();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start) );
   }
 
   private void doHandover() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.S1_handover();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(HANDOVER_OPERATION, (int) (end - start) );
   }
 
   private void doTrackingAreaUpdate() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.tracking_area_update();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(TAU_OPERATION, (int) (end - start) );
   }
 
   private void doS1release() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.S1_release();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start) );
   }
 
   private void doServiceRequest() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.service_request();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start) );
   }
 
   private void doDetach() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.detach();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(DETACH_OPERATION, (int) (end - start) );
   }
 
   private void doInitialAttach() {
+    int ueIDindex = random.nextInt(ueIDsAsList.size() - 1);
+    String ueID = ueIDsAsList.get(ueIDindex);
+    long start = System.currentTimeMillis();
+    UE ue = ueRegion.get(ueID);
+    if (ue != null) {
+      ue.initial_attach();
+    }
+    ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(ATTACH_OPERATION, (int) (end - start) );
   }
 
   @Override
@@ -460,7 +543,6 @@ public class GeodeWorkload extends Workload {
    * Creates a weighted discrete values with database operations for a workload to perform.
    * Weights/proportions are read from the properties list and defaults are used
    * when values are not configured.
-   * Current operations are "READ", "UPDATE", "INSERT", "SCAN" and "READMODIFYWRITE".
    *
    * @param p The properties list to pull weights from.
    * @return A generator that can be used to determine the next operation to perform.
@@ -729,6 +811,10 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
   }
 
   public void session_management() {
+
+  }
+
+  public void cell_reselect() {
 
   }
 
