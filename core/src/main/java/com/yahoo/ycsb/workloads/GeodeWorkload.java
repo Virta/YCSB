@@ -1,6 +1,13 @@
 package com.yahoo.ycsb.workloads;
 
 import com.gemstone.gemfire.InvalidDeltaException;
+import com.gemstone.gemfire.cache.*;
+import com.gemstone.gemfire.cache.client.ClientCache;
+import com.gemstone.gemfire.cache.client.ClientCacheFactory;
+import com.gemstone.gemfire.cache.client.ClientRegionFactory;
+import com.gemstone.gemfire.cache.client.ClientRegionShortcut;
+import com.gemstone.gemfire.internal.admin.remote.DistributionLocatorId;
+import com.gemstone.gemfire.internal.concurrent.ConcurrentHashSet;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
 import com.yahoo.ycsb.measurements.Measurements;
@@ -9,10 +16,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created by frojala on 16/08/16.
@@ -179,28 +183,54 @@ public class GeodeWorkload extends Workload {
   public static final String INSERTION_RETRY_INTERVAL_DEFAULT = "3";
 
 
+//  NumberGenerator keysequence;
+//  NumberGenerator fieldchooser;
+//  NumberGenerator scanlength;
+//  int zeropadding;
 
-  NumberGenerator keysequence;
-
-  DiscreteGenerator operationchooser;
-
-  NumberGenerator keychooser;
-
-  NumberGenerator fieldchooser;
-
-  AcknowledgedCounterGenerator transactioninsertkeysequence;
-
-  NumberGenerator scanlength;
-
-  boolean orderedinserts;
-
-  int recordcount;
-  int zeropadding;
-
-  int insertionRetryLimit;
-  int insertionRetryInterval;
+  private DiscreteGenerator operationchooser;
+  private NumberGenerator keychooser;
+  private AcknowledgedCounterGenerator transactioninsertkeysequence;
+  private boolean orderedinserts;
+  private int recordcount;
+  private int insertionRetryLimit;
+  private int insertionRetryInterval;
 
   private Measurements _measurements = Measurements.getMeasurements();
+
+  /**
+   * We need to instantiate a DB object at the thread level as the interface does not provide the proper implementations.
+   */
+
+  /** property name of the port where Geode server is listening for connections. */
+  private static final String SERVERPORT_PROPERTY_NAME = "geode.serverport";
+
+  /** property name of the host where Geode server is running. */
+  private static final String SERVERHOST_PROPERTY_NAME = "geode.serverhost";
+
+  /** default value of {@link #SERVERHOST_PROPERTY_NAME}. */
+  private static final String SERVERHOST_PROPERTY_DEFAULT = "localhost";
+
+  /** property name to specify a Geode locator. This property can be used in both
+   * client server and p2p topology */
+  private static final String LOCATOR_PROPERTY_NAME = "geode.locator";
+
+  /** property name to specify Geode topology. */
+  private static final String TOPOLOGY_PROPERTY_NAME = "geode.topology";
+
+  /** value of {@value #TOPOLOGY_PROPERTY_NAME} when peer to peer topology should be used.
+   *  (client-server topology is default) */
+  private static final String TOPOLOGY_P2P_VALUE = "p2p";
+
+  private GemFireCache cache;
+
+  /** true if ycsb client runs as a client to a Geode cache server. */
+  private boolean isClient;
+  /** Keep the region object at hand so it does not have to be created each time, saves on time. */
+  private Region<String, UE> ueRegion;
+  /** Keep the inserted ueIDs at hand to prevent trying to add a UE with the same ID (IMSI). Also useful for choosing a random UE. */
+  private ConcurrentHashSet<String> ueIDs;
+
 
 
   @Override
@@ -276,54 +306,148 @@ public class GeodeWorkload extends Workload {
 
     insertionRetryLimit = Integer.parseInt(p.getProperty(INSERTION_RETRY_LIMIT, INSERTION_RETRY_LIMIT_DEFAULT));
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
+    ueIDs = new ConcurrentHashSet<>(insertcount);
   }
 
   @Override
-  public Object initThread(Properties properties, int myThreadId, int threadCount) throws WorkloadException {
+  public Object initThread(Properties props, int myThreadId, int threadCount) throws WorkloadException {
+    // hostName where Geode cacheServer is running
+    String serverHost = null;
+    // port of Geode cacheServer
+    int serverPort = 0;
+    String locatorStr = null;
+
+    if (props != null && !props.isEmpty()) {
+      String serverPortStr = props.getProperty(SERVERPORT_PROPERTY_NAME);
+      if (serverPortStr != null) {
+        serverPort = Integer.parseInt(serverPortStr);
+      }
+      serverHost = props.getProperty(SERVERHOST_PROPERTY_NAME, SERVERHOST_PROPERTY_DEFAULT);
+      locatorStr = props.getProperty(LOCATOR_PROPERTY_NAME);
+
+      String topology = props.getProperty(TOPOLOGY_PROPERTY_NAME);
+      if (topology != null && topology.equals(TOPOLOGY_P2P_VALUE)) {
+        CacheFactory cf = new CacheFactory();
+        if (locatorStr != null) {
+          cf.set("locators", locatorStr);
+        }
+        cache = cf.create();
+        ueRegion = getRegion(table);
+        isClient = false;
+        return null;
+      }
+    }
+    isClient = true;
+    DistributionLocatorId locator = null;
+    if (locatorStr != null) {
+      locator = new DistributionLocatorId(locatorStr);
+    }
+    ClientCacheFactory ccf = new ClientCacheFactory();
+    if (serverPort != 0) {
+      ccf.addPoolServer(serverHost, serverPort);
+    } else if (locator != null) {
+      ccf.addPoolLocator(locator.getHost().getCanonicalHostName(), locator.getPort());
+    }
+    cache = ccf.create();
+    ueRegion = getRegion(table);
     return null;
   }
 
   @Override
   public boolean doInsert(DB db, Object threadstate) {
+    UE ue = new UE();
+    while (!ueIDs.add(ue.getIMSI())) ue = new UE();
+    Status status;
+    int numOfRetries = 0;
+    do {
+      ueRegion.put(ue.getIMSI(), ue);
+      status = Status.OK; // TODO: check if we can use the return value from the put above.
+      if (status == Status.OK) {
+        break;
+      }
+      // Retry if configured. Without retrying, the load process will fail
+      // even if one single insertion fails. User can optionally configure
+      // an insertion retry limit (default is 0) to enable retry.
+      if (++numOfRetries <= insertionRetryLimit) {
+        System.err.println("Retrying insertion, retry count: " + numOfRetries);
+        try {
+          // Sleep for a random number between [0.8, 1.2)*insertionRetryInterval.
+          int sleepTime = (int) (1000 * insertionRetryInterval * (0.8 + 0.4 * Math.random()));
+          Thread.sleep(sleepTime);
+        } catch (InterruptedException e) {
+          break;
+        }
 
-    return false;
+      } else {
+        System.err.println("Error inserting, not retrying any more. number of attempts: " + numOfRetries +
+          "Insertion Retry Limit: " + insertionRetryLimit);
+        break;
+
+      }
+    } while (true);
+
+    return (status == Status.OK);
   }
 
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
-
+        doInitialAttach();
         break;
       case DETACH_OPERATION:
-
+        doDetach();
         break;
       case SERVICE_REQUEST_OPERATION:
-
+        doServiceRequest();
         break;
       case S1_RELEASE_OPERATION:
-
+        doS1release();
         break;
       case TAU_OPERATION:
-
+        doTrackingAreaUpdate();
         break;
       case HANDOVER_OPERATION:
-
+        doHandover();
         break;
       case CELL_RESELECT_OPERATION:
-
+        doCellReSelection();
         break;
       case SESSION_MANAGEMENT_OPERATION:
-
+        doSessionManagement();
         break;
       case "INSERT":
-
+        doInsert(db, threadstate);
         break;
       default:
-        // detach
+        doDetach();
     }
 
     return true;
+  }
+
+  private void doSessionManagement() {
+  }
+
+  private void doCellReSelection() {
+  }
+
+  private void doHandover() {
+  }
+
+  private void doTrackingAreaUpdate() {
+  }
+
+  private void doS1release() {
+  }
+
+  private void doServiceRequest() {
+  }
+
+  private void doDetach() {
+  }
+
+  private void doInitialAttach() {
   }
 
   @Override
@@ -342,7 +466,7 @@ public class GeodeWorkload extends Workload {
    * @return A generator that can be used to determine the next operation to perform.
    * @throws IllegalArgumentException if the properties object was null.
    */
-  public static DiscreteGenerator createOperationGenerator(final Properties p) {
+  private static DiscreteGenerator createOperationGenerator(final Properties p) {
     if (p == null) {
       throw new IllegalArgumentException("Properties object cannot be null");
     }
@@ -368,6 +492,26 @@ public class GeodeWorkload extends Workload {
     if (insertproportion > 0) operationchooser.addValue(insertproportion, "INSERT");
 
     return operationchooser;
+  }
+
+  private Region<String, UE> getRegion(String table) {
+    Region<String, UE> r = cache.getRegion(table);
+    if (r == null) {
+      try {
+        if (isClient) {
+          ClientRegionFactory<String, UE> crf =
+            ((ClientCache) cache).createClientRegionFactory(ClientRegionShortcut.PROXY);
+          r = crf.create(table);
+        } else {
+          RegionFactory<String, UE> rf = ((Cache) cache).createRegionFactory(RegionShortcut.PARTITION);
+          r = rf.create(table);
+        }
+      } catch (RegionExistsException e) {
+        // another thread created the region
+        r = cache.getRegion(table);
+      }
+    }
+    return r;
   }
 
 }
@@ -591,6 +735,8 @@ class UE implements com.gemstone.gemfire.Delta, Serializable {
   public int getStatus() {
     return this.status;
   }
+
+  public String getIMSI() { return this.IMSI; }
 
   private String randomString(int chars, Random rand) {
     String s = "";
