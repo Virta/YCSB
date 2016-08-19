@@ -450,6 +450,7 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("SM" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -464,6 +465,7 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("CR" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -478,6 +480,7 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("HAND" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -492,6 +495,8 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("TAU" + ueID);
+
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -506,6 +511,7 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("S1" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -520,6 +526,8 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("SR" + ueID);
+
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -534,6 +542,8 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("DETACH" + ueID);
+
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -548,6 +558,8 @@ public class GeodeWorkload extends Workload {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
+    System.out.println("Attach" + ueID);
+
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
