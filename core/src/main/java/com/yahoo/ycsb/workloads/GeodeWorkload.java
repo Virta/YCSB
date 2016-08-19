@@ -7,6 +7,7 @@ import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionShortcut;
 import com.gemstone.gemfire.internal.admin.remote.DistributionLocatorId;
+import com.sun.tools.javac.util.Assert;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
 import com.yahoo.ycsb.measurements.Measurements;
@@ -362,7 +363,8 @@ public class GeodeWorkload extends Workload {
     boolean putSuccess = false;
     while (!putSuccess){
       String ueID = ue.getIMSI();
-      putSuccess = ueIDs.get(ueID);
+      Assert.checkNonNull(ueIDs);
+      putSuccess = ueIDs.put(ueID, Boolean.TRUE);
     }
     Status status;
     int numOfRetries = 0;
