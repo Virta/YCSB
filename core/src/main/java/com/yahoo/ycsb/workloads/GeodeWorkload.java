@@ -393,16 +393,6 @@ public class GeodeWorkload extends Workload {
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
     if (ueIDsAsList == null) ueIDsAsList = new ArrayList<>(ueRegion.keySet());
-    try {
-      SelectResults r = ueRegion.query("SELECT * FROM usertable");
-      while (r.iterator().hasNext()) {
-        Object o = r.iterator().next();
-        System.out.println(o.toString());
-        System.out.println(o.getClass());
-      }
-    } catch (java.lang.Exception e) {
-
-    }
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
         doInitialAttach();
