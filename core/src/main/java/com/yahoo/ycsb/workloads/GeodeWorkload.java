@@ -6,6 +6,7 @@ import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionShortcut;
+import com.gemstone.gemfire.cache.query.SelectResults;
 import com.gemstone.gemfire.internal.admin.remote.DistributionLocatorId;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
@@ -16,7 +17,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by frojala on 16/08/16.
@@ -392,6 +392,16 @@ public class GeodeWorkload extends Workload {
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
     if (ueIDsAsList == null) ueIDsAsList = new ArrayList<>(ueRegion.keySet());
+    try {
+      SelectResults r = ueRegion.query("SELECT * FROM usertable");
+      while (r.iterator().hasNext()) {
+        Object o = r.iterator().next();
+        System.out.println(o.toString());
+        System.out.println(o.getClass());
+      }
+    } catch (java.lang.Exception e) {
+
+    }
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
         doInitialAttach();
