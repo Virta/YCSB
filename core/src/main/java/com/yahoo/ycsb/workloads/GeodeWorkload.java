@@ -228,8 +228,6 @@ public class GeodeWorkload extends Workload {
   private boolean isClient;
   /** Keep the region object at hand so it does not have to be created each time, saves on time. */
   private Region<String, UE> ueRegion;
-  /** Keep the inserted ueIDs at hand to prevent trying to add a UE with the same ID (IMSI). Also useful for choosing a random UE. */
-  private ConcurrentHashMap<String, Boolean> ueIDs;
   /** Keep the ueIDs as a list, so it can be indexed fast, used for choosing the next UE at random. */
   private List<String> ueIDsAsList;
   private Random random;
@@ -307,7 +305,6 @@ public class GeodeWorkload extends Workload {
 
     insertionRetryLimit = Integer.parseInt(p.getProperty(INSERTION_RETRY_LIMIT, INSERTION_RETRY_LIMIT_DEFAULT));
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
-    ueIDs = new ConcurrentHashMap<>(insertcount);
     random = new Random();
     random.setSeed(System.currentTimeMillis());
   }
@@ -359,7 +356,7 @@ public class GeodeWorkload extends Workload {
   @Override
   public boolean doInsert(DB db, Object threadstate) {
     UE ue = new UE();
-    while (!ueIDs.put(ue.getIMSI(), false)) ue = new UE();
+    while (ueRegion.containsKey(ue.getIMSI())) ue = new UE();
     Status status;
     int numOfRetries = 0;
     do {
@@ -394,7 +391,7 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
-    if (ueIDsAsList == null) ueIDsAsList = Collections.list(ueIDs.keys());
+    if (ueIDsAsList == null) ueIDsAsList = new ArrayList<>(ueRegion.keySet());
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
         doInitialAttach();
@@ -422,7 +419,7 @@ public class GeodeWorkload extends Workload {
         break;
       case "INSERT":
         doInsert(db, threadstate);
-        ueIDsAsList = Collections.list(ueIDs.keys());
+        ueIDsAsList = new ArrayList<>(ueRegion.keySet());
         break;
       default:
         doDetach();
