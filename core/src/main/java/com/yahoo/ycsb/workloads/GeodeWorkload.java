@@ -363,7 +363,7 @@ public class GeodeWorkload extends Workload {
     boolean putSuccess = false;
     while (!putSuccess){
       String ueID = ue.getIMSI();
-      Assert.checkNonNull(ueIDs);
+      assert ueIDs != null : ueIDs;
       putSuccess = ueIDs.put(ueID, Boolean.TRUE);
     }
     Status status;
