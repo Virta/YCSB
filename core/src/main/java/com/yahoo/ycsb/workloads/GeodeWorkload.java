@@ -6,6 +6,8 @@ import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionShortcut;
+import com.gemstone.gemfire.cache.query.Query;
+import com.gemstone.gemfire.cache.query.QueryService;
 import com.gemstone.gemfire.cache.query.SelectResults;
 import com.gemstone.gemfire.internal.admin.remote.DistributionLocatorId;
 import com.yahoo.ycsb.*;
@@ -392,7 +394,23 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
-    if (ueIDsAsList == null) ueIDsAsList = new ArrayList<>(ueRegion.keySet());
+    if (ueIDsAsList == null) {
+      QueryService serv = cache.getQueryService();
+      Query q = serv.newQuery("SELECT key FROM /usertable.entrySet");
+      List<String> results = null;
+      try {
+        results = ((SelectResults<String>) q.execute()).asList();
+      } catch (Exception e) {
+        System.out.println(e.getMessage());
+      }
+      if (results != null) {
+        ueIDsAsList = results;
+      } else {
+        System.out.println("Could not initialise ueID list from query results");
+        System.exit(1);
+      }
+    }
+
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
         doInitialAttach();
