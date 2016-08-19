@@ -359,11 +359,7 @@ public class GeodeWorkload extends Workload {
   @Override
   public boolean doInsert(DB db, Object threadstate) {
     UE ue = new UE();
-    boolean putSuccess = false;
-    while (!putSuccess) {
-      String ueID = ue.getIMSI();
-      putSuccess = ueIDs.put(ueID, false);
-    }
+    while (!ueIDs.put(ue.getIMSI(), Boolean.TRUE)) ue = new UE();
     Status status;
     int numOfRetries = 0;
     do {
