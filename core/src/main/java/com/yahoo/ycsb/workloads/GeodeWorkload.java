@@ -257,6 +257,7 @@ public class GeodeWorkload extends Workload {
   FileWriter fw;
   BufferedWriter bw;
   PrintWriter out;
+  String outfilepath = "UEIDpath";
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -334,11 +335,11 @@ public class GeodeWorkload extends Workload {
     random = new Random();
     random.setSeed(System.currentTimeMillis());
     try{
-      fw = new FileWriter("outfilename", true);
+      fw = new FileWriter(outfilepath, true);
       bw = new BufferedWriter(fw);
-      out = new PrintWriter(bw))
+      out = new PrintWriter(bw);
     } catch (IOException e) {
-      //exception handling left as an exercise for the reader
+      System.out.println("Could not open file for writing: " + e.getMessage());
     }
   }
 
@@ -395,8 +396,7 @@ public class GeodeWorkload extends Workload {
     do {
       ueRegion.putIfAbsent(ue.getIMSI(), ue);
       out.println(ue.getIMSI());
-      status = Status.OK;
-      //more codestatus = Status.OK; // TODO: check if we can use the return value from the put above.
+      status = Status.OK;   // TODO: check if we can use the return value from the put above.
       if (status == Status.OK) {
         break;
       }
@@ -466,20 +466,12 @@ public class GeodeWorkload extends Workload {
   }
 
   private void getRegionKeyData() {
-    QueryService serv = cache.getQueryService();
-    Query q = serv.newQuery("SELECT key FROM /" + table + ".entrySet");
-    List<String> results = null;
     try {
-      results = ((SelectResults<String>) q.execute()).asList();
+      ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
     } catch (Exception e) {
-      System.out.println(e.getMessage());
+      System.out.println("Could not read from ueID file: " + e.getMessage());
     }
-    if (results != null) {
-      ueIDsAsList = results;
-    } else {
-      System.out.println("Could not initialise ueID list from query results");
-      System.exit(1);
-    }
+    System.out.println("ueUD list size: " + ueIDsAsList.size());
   }
 
   private void doSessionManagement() {
