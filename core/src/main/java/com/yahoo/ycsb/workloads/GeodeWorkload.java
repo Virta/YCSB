@@ -358,7 +358,7 @@ public class GeodeWorkload extends Workload {
   @Override
   public boolean doInsert(DB db, Object threadstate) {
     UE ue = new UE();
-    while (ueRegion.containsKey(ue.getIMSI())) ue = new UE();
+    while (ueRegion.get(ue.getIMSI()) != null) ue = new UE();
     Status status;
     int numOfRetries = 0;
     do {
@@ -395,20 +395,7 @@ public class GeodeWorkload extends Workload {
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
     if (ueIDsAsList == null) {
-      QueryService serv = cache.getQueryService();
-      Query q = serv.newQuery("SELECT key FROM /usertable.entrySet");
-      List<String> results = null;
-      try {
-        results = ((SelectResults<String>) q.execute()).asList();
-      } catch (Exception e) {
-        System.out.println(e.getMessage());
-      }
-      if (results != null) {
-        ueIDsAsList = results;
-      } else {
-        System.out.println("Could not initialise ueID list from query results");
-        System.exit(1);
-      }
+      getRegionKeyData();
     }
 
     switch (operationchooser.nextString()) {
@@ -438,7 +425,7 @@ public class GeodeWorkload extends Workload {
         break;
       case "INSERT":
         doInsert(db, threadstate);
-        ueIDsAsList = new ArrayList<>(ueRegion.keySet());
+        getRegionKeyData();
         break;
       default:
         doDetach();
@@ -446,11 +433,27 @@ public class GeodeWorkload extends Workload {
     return true;
   }
 
+  private void getRegionKeyData() {
+    QueryService serv = cache.getQueryService();
+    Query q = serv.newQuery("SELECT key FROM /"+table+".entrySet");
+    List<String> results = null;
+    try {
+      results = ((SelectResults<String>) q.execute()).asList();
+    } catch (Exception e) {
+      System.out.println(e.getMessage());
+    }
+    if (results != null) {
+      ueIDsAsList = results;
+    } else {
+      System.out.println("Could not initialise ueID list from query results");
+      System.exit(1);
+    }
+  }
+
   private void doSessionManagement() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("SM" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -459,13 +462,13 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start) );
   }
 
   private void doCellReSelection() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("CR" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -474,13 +477,13 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start) );
   }
 
   private void doHandover() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("HAND" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -489,14 +492,13 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(HANDOVER_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start) );
   }
 
   private void doTrackingAreaUpdate() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("TAU" + ueID);
-
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -505,13 +507,13 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(TAU_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(TAU_OPERATION, (int) (end - start) );
   }
 
   private void doS1release() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("S1" + ueID);
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -520,14 +522,13 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start) );
   }
 
   private void doServiceRequest() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("SR" + ueID);
-
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -536,14 +537,13 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start) );
   }
 
   private void doDetach() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("DETACH" + ueID);
-
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -552,14 +552,13 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(DETACH_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(DETACH_OPERATION, (int) (end - start) );
   }
 
   private void doInitialAttach() {
     System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
-    System.out.println("Attach" + ueID);
-
     long start = System.currentTimeMillis();
     UE ue = ueRegion.get(ueID);
     if (ue != null) {
@@ -568,6 +567,7 @@ public class GeodeWorkload extends Workload {
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(ATTACH_OPERATION, (int) (end - start) );
+    _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start) );
   }
 
   @Override
