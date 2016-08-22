@@ -451,7 +451,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doSessionManagement() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -466,7 +465,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doCellReSelection() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -481,7 +479,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doHandover() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -496,7 +493,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doTrackingAreaUpdate() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -511,7 +507,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doS1release() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -526,7 +521,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doServiceRequest() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -541,7 +535,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doDetach() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -556,7 +549,6 @@ public class GeodeWorkload extends Workload {
   }
 
   private void doInitialAttach() {
-    System.out.println(ueIDsAsList.size());
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
