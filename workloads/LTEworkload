@@ -108,7 +108,12 @@ table=usertable
 #columnfamily=
 
 # How the latency measurements are presented
-measurementtype=histogram
+measurmenttype=hdrhistogram+histogram
+measurment.interval=both
+hdrhistogram.fileoutput=true
+hdrhistogram.output.path=hdrhistogram_
+
+#measurementtype=histogram
 #measurementtype=timeseries
 #measurementtype=raw
 # When measurementtype is set to raw, measurements will be output
