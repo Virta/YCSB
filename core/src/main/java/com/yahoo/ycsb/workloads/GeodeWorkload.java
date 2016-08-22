@@ -14,10 +14,12 @@ import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
 import com.yahoo.ycsb.measurements.Measurements;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
@@ -204,35 +206,57 @@ public class GeodeWorkload extends Workload {
    * We need to instantiate a DB object at the thread level as the interface does not provide the proper implementations.
    */
 
-  /** property name of the port where Geode server is listening for connections. */
+  /**
+   * property name of the port where Geode server is listening for connections.
+   */
   private static final String SERVERPORT_PROPERTY_NAME = "geode.serverport";
 
-  /** property name of the host where Geode server is running. */
+  /**
+   * property name of the host where Geode server is running.
+   */
   private static final String SERVERHOST_PROPERTY_NAME = "geode.serverhost";
 
-  /** default value of {@link #SERVERHOST_PROPERTY_NAME}. */
+  /**
+   * default value of {@link #SERVERHOST_PROPERTY_NAME}.
+   */
   private static final String SERVERHOST_PROPERTY_DEFAULT = "localhost";
 
-  /** property name to specify a Geode locator. This property can be used in both
-   * client server and p2p topology */
+  /**
+   * property name to specify a Geode locator. This property can be used in both
+   * client server and p2p topology
+   */
   private static final String LOCATOR_PROPERTY_NAME = "geode.locator";
 
-  /** property name to specify Geode topology. */
+  /**
+   * property name to specify Geode topology.
+   */
   private static final String TOPOLOGY_PROPERTY_NAME = "geode.topology";
 
-  /** value of {@value #TOPOLOGY_PROPERTY_NAME} when peer to peer topology should be used.
-   *  (client-server topology is default) */
+  /**
+   * value of {@value #TOPOLOGY_PROPERTY_NAME} when peer to peer topology should be used.
+   * (client-server topology is default)
+   */
   private static final String TOPOLOGY_P2P_VALUE = "p2p";
 
   private GemFireCache cache;
 
-  /** true if ycsb client runs as a client to a Geode cache server. */
+  /**
+   * true if ycsb client runs as a client to a Geode cache server.
+   */
   private boolean isClient;
-  /** Keep the region object at hand so it does not have to be created each time, saves on time. */
+  /**
+   * Keep the region object at hand so it does not have to be created each time, saves on time.
+   */
   private Region<String, UE> ueRegion;
-  /** Keep the ueIDs as a list, so it can be indexed fast, used for choosing the next UE at random. */
+  /**
+   * Keep the ueIDs as a list, so it can be indexed fast, used for choosing the next UE at random.
+   */
   private List<String> ueIDsAsList;
   private Random random;
+
+  FileWriter fw;
+  BufferedWriter bw;
+  PrintWriter out;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -309,6 +333,13 @@ public class GeodeWorkload extends Workload {
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
     random = new Random();
     random.setSeed(System.currentTimeMillis());
+    try{
+      fw = new FileWriter("outfilename", true);
+      bw = new BufferedWriter(fw);
+      out = new PrintWriter(bw))
+    } catch (IOException e) {
+      //exception handling left as an exercise for the reader
+    }
   }
 
   @Override
@@ -363,7 +394,9 @@ public class GeodeWorkload extends Workload {
     int numOfRetries = 0;
     do {
       ueRegion.putIfAbsent(ue.getIMSI(), ue);
-      status = Status.OK; // TODO: check if we can use the return value from the put above.
+      out.println(ue.getIMSI());
+      status = Status.OK;
+      //more codestatus = Status.OK; // TODO: check if we can use the return value from the put above.
       if (status == Status.OK) {
         break;
       }
@@ -434,7 +467,7 @@ public class GeodeWorkload extends Workload {
 
   private void getRegionKeyData() {
     QueryService serv = cache.getQueryService();
-    Query q = serv.newQuery("SELECT key FROM /"+table+".entrySet");
+    Query q = serv.newQuery("SELECT key FROM /" + table + ".entrySet");
     List<String> results = null;
     try {
       results = ((SelectResults<String>) q.execute()).asList();
@@ -459,8 +492,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start) );
+    _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
+    _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
   }
 
   private void doCellReSelection() {
@@ -473,8 +506,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start) );
+    _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start));
+    _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start));
   }
 
   private void doHandover() {
@@ -487,8 +520,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(HANDOVER_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start) );
+    _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
+    _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
   }
 
   private void doTrackingAreaUpdate() {
@@ -501,8 +534,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(TAU_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(TAU_OPERATION, (int) (end - start) );
+    _measurements.measure(TAU_OPERATION, (int) (end - start));
+    _measurements.measureIntended(TAU_OPERATION, (int) (end - start));
   }
 
   private void doS1release() {
@@ -515,8 +548,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start) );
+    _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start));
+    _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start));
   }
 
   private void doServiceRequest() {
@@ -529,8 +562,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start) );
+    _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start));
+    _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start));
   }
 
   private void doDetach() {
@@ -543,8 +576,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(DETACH_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(DETACH_OPERATION, (int) (end - start) );
+    _measurements.measure(DETACH_OPERATION, (int) (end - start));
+    _measurements.measureIntended(DETACH_OPERATION, (int) (end - start));
   }
 
   private void doInitialAttach() {
@@ -557,8 +590,8 @@ public class GeodeWorkload extends Workload {
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
-    _measurements.measure(ATTACH_OPERATION, (int) (end - start) );
-    _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start) );
+    _measurements.measure(ATTACH_OPERATION, (int) (end - start));
+    _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start));
   }
 
   @Override
@@ -598,7 +631,8 @@ public class GeodeWorkload extends Workload {
     if (tauproprotion > 0) operationchooser.addValue(tauproprotion, TAU_OPERATION);
     if (handoverproportion > 0) operationchooser.addValue(handoverproportion, HANDOVER_OPERATION);
     if (cellreselectionproportion > 0) operationchooser.addValue(cellreselectionproportion, CELL_RESELECT_OPERATION);
-    if (sessionmanagementproportion > 0) operationchooser.addValue(sessionmanagementproportion, SESSION_MANAGEMENT_OPERATION);
+    if (sessionmanagementproportion > 0)
+      operationchooser.addValue(sessionmanagementproportion, SESSION_MANAGEMENT_OPERATION);
     if (insertproportion > 0) operationchooser.addValue(insertproportion, "INSERT");
 
     return operationchooser;
