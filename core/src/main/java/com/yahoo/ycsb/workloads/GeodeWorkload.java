@@ -363,7 +363,6 @@ public class GeodeWorkload extends Workload {
     int numOfRetries = 0;
     do {
       ueRegion.putIfAbsent(ue.getIMSI(), ue);
-      System.out.println(ue.getIMSI());
       status = Status.OK; // TODO: check if we can use the return value from the put above.
       if (status == Status.OK) {
         break;
