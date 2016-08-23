@@ -483,7 +483,6 @@ public class GeodeWorkload extends Workload {
     } catch (Exception e) {
       System.out.println("Could not read from ueID file: " + e.getMessage());
     }
-    System.out.println("ueUD list size: " + ueIDsAsList.size());
   }
 
   private void doSessionManagement() {
