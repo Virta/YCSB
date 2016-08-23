@@ -257,7 +257,7 @@ public class GeodeWorkload extends Workload {
   FileWriter fw;
   BufferedWriter bw;
   PrintWriter out;
-  String outfilepath = "UEIDpath";
+  String outfilepath = "UEIDfile";
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -379,7 +379,7 @@ public class GeodeWorkload extends Workload {
     cache = ccf.create();
     ueRegion = getRegion(table);
     try{
-      fw = new FileWriter(outfilepath+myThreadId, true);
+      fw = new FileWriter(outfilepath, true);
       bw = new BufferedWriter(fw);
       out = new PrintWriter(bw);
     } catch (IOException e) {
