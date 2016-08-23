@@ -334,13 +334,7 @@ public class GeodeWorkload extends Workload {
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
     random = new Random();
     random.setSeed(System.currentTimeMillis());
-    try{
-      fw = new FileWriter(outfilepath, true);
-      bw = new BufferedWriter(fw);
-      out = new PrintWriter(bw);
-    } catch (IOException e) {
-      System.out.println("Could not open file for writing: " + e.getMessage());
-    }
+
   }
 
   @Override
@@ -384,7 +378,25 @@ public class GeodeWorkload extends Workload {
     }
     cache = ccf.create();
     ueRegion = getRegion(table);
+    try{
+      fw = new FileWriter(outfilepath+myThreadId, true);
+      bw = new BufferedWriter(fw);
+      out = new PrintWriter(bw);
+    } catch (IOException e) {
+      System.out.println("Could not open file for writing: " + e.getMessage());
+    }
     return null;
+  }
+
+  @Override
+  public void cleanup() throws WorkloadException {
+    out.close();
+    try {
+      bw.close();
+      fw.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
@@ -465,7 +477,7 @@ public class GeodeWorkload extends Workload {
     return true;
   }
 
-  private void getRegionKeyData() {
+  private synchronized void getRegionKeyData() {
     try {
       ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
     } catch (Exception e) {
@@ -584,11 +596,6 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(ATTACH_OPERATION, (int) (end - start));
     _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start));
-  }
-
-  @Override
-  public void cleanup() throws WorkloadException {
-
   }
 
 
