@@ -1,5 +1,6 @@
 package com.yahoo.ycsb.workloads;
 
+import com.gemstone.gemfire.CopyHelper;
 import com.gemstone.gemfire.cache.*;
 import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.cache.client.ClientCacheFactory;
@@ -483,7 +484,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.session_management();
     }
@@ -497,7 +499,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.cell_reselect();
     }
@@ -511,7 +514,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.S1_handover();
     }
@@ -525,7 +529,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.tracking_area_update();
     }
@@ -539,7 +544,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.S1_release();
     }
@@ -553,7 +559,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.service_request();
     }
@@ -567,7 +574,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.detach();
     }
@@ -581,7 +589,8 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    UE ue = ueRegion.get(ueID);
+    Object obj = ueRegion.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.initial_attach();
     }
