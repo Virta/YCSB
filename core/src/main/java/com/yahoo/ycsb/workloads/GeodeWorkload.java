@@ -1,14 +1,10 @@
 package com.yahoo.ycsb.workloads;
 
-import com.gemstone.gemfire.InvalidDeltaException;
 import com.gemstone.gemfire.cache.*;
 import com.gemstone.gemfire.cache.client.ClientCache;
 import com.gemstone.gemfire.cache.client.ClientCacheFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionFactory;
 import com.gemstone.gemfire.cache.client.ClientRegionShortcut;
-import com.gemstone.gemfire.cache.query.Query;
-import com.gemstone.gemfire.cache.query.QueryService;
-import com.gemstone.gemfire.cache.query.SelectResults;
 import com.gemstone.gemfire.internal.admin.remote.DistributionLocatorId;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
@@ -17,9 +13,7 @@ import com.yahoo.ycsb.measurements.Measurements;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
