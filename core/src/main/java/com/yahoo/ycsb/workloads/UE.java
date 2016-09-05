@@ -47,7 +47,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
   private int IP;
   private short C_RNTI;
   private int eNB_UE_S1AP;
-  private int MME_YE_S1AP;
+  private int MME_UE_S1AP;
   private int OLD_eNB_UE_X2;
   private int NEW_eNB_UE_X2;
   private int ECI;
@@ -124,7 +124,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     this.IP = rand.nextInt();                                     this.IP_ch = true;
     this.C_RNTI = (short) rand.nextInt(Short.MAX_VALUE - 1);      this.C_RNTI_ch = true;
     this.eNB_UE_S1AP = rand.nextInt();                            this.eNB_UE_S1AP_ch = true;
-    this.MME_YE_S1AP = rand.nextInt();                            this.MME_YE_S1AP_ch = true;
+    this.MME_UE_S1AP = rand.nextInt();                            this.MME_YE_S1AP_ch = true;
     this.ECI = rand.nextInt();                                    this.ECI_ch = true;
     this.ECGI = PLMN_ID + ECI;                                    this.ECGI_ch = true;
     this.TAI = rand.nextInt();                                    this.TAI_ch = true;
@@ -154,7 +154,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     this.IP = 0;                                     this.IP_ch = true;
     this.C_RNTI = 0;                                 this.C_RNTI_ch = true;
     this.eNB_UE_S1AP = 0;                            this.eNB_UE_S1AP_ch = true;
-    this.MME_YE_S1AP = 0;                            this.MME_YE_S1AP_ch = true;
+    this.MME_UE_S1AP = 0;                            this.MME_YE_S1AP_ch = true;
     this.ECI = 0;                                    this.ECI_ch = true;
     this.ECGI = PLMN_ID + ECI;                       this.ECGI_ch = true;
     this.PDN_ID = "";                                this.PDN_ID_ch = true;
@@ -177,7 +177,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     this.status = 3; /* Idle */                      this.status_ch = true;
     this.C_RNTI = 0;                                 this.C_RNTI_ch = true;
     this.eNB_UE_S1AP = 0;                            this.eNB_UE_S1AP_ch = true;
-    this.MME_YE_S1AP = 0;                            this.MME_YE_S1AP_ch = true;
+    this.MME_UE_S1AP = 0;                            this.MME_YE_S1AP_ch = true;
     this.ECI = 0;                                    this.ECI_ch = true;
     this.ECGI = PLMN_ID + ECI;                       this.ECGI_ch = true;
     this.DR_bearer = 0;                              this.DR_bearer_ch = true;
@@ -194,7 +194,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     this.status = 2; /* Active */                                 this.status_ch = true;
     this.C_RNTI = (short) rand.nextInt(Short.MAX_VALUE - 1);      this.C_RNTI_ch = true;
     this.eNB_UE_S1AP = rand.nextInt();                            this.eNB_UE_S1AP_ch = true;
-    this.MME_YE_S1AP = rand.nextInt();                            this.MME_YE_S1AP_ch = true;
+    this.MME_UE_S1AP = rand.nextInt();                            this.MME_YE_S1AP_ch = true;
     this.ECI = rand.nextInt();                                    this.ECI_ch = true;
     this.ECGI = PLMN_ID + ECI;                                    this.ECGI_ch = true;
     this.DR_bearer = (byte) rand.nextInt(Byte.MAX_VALUE - 1);     this.DR_bearer_ch = true;
@@ -217,20 +217,36 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     this.master_ch = true;
   }
 
-  public void S1_handover() {
-
-  }
-
-  public void X2_handover() {
-
+  public void handover() {
+    // in intra-LTE the information entites are the same as in X2 handover. T
+    // This is a mockup, as in the deployment scenario we envision there to be no need for this.
+    Random rand = new Random();
+    this.S1_TEID_DL = rand.nextInt();                             this.S1_TEID_DL_ch = true;
+    this.DR_bearer = (byte) rand.nextInt(Byte.MAX_VALUE - 1);     this.DR_bearer_ch = true;
+    this.ECI = rand.nextInt();                                    this.ECI_ch = true;
+    this.ECGI = PLMN_ID + ECI;                                    this.ECGI_ch = true;
+    this.C_RNTI = (short) rand.nextInt(Short.MAX_VALUE - 1);      this.C_RNTI_ch = true;
+    this.eNB_UE_S1AP = rand.nextInt();                            this.eNB_UE_S1AP_ch = true;
+    this.K_ENB = randomString(16, rand);                          this.K_ENB_ch = true;
+    this.K_RRCint = randomString(16, rand);                       this.K_RRCint_ch = true;
+    this.K_RRCenc = randomString(16, rand);                       this.K_RRCenc_ch = true;
+    this.K_UPenc = randomString(16, rand);                        this.K_UPenc_ch = true;
+    this.master_ch = true;
   }
 
   public void session_management() {
-
+    // we mock a session management act by changing the EPS, S1 and S5 TEID for creation of new bearers.
+    Random rand = new Random();
+    this.EPS_bearer = (byte) rand.nextInt(Byte.MAX_VALUE - 1);    this.EPS_bearer_ch = true;
+    this.S1_TEID_UL = rand.nextInt();                             this.S1_TEID_UL_ch = true;
+    this.S1_TEID_DL = rand.nextInt();                             this.S1_TEID_DL_ch = true;
+    this.S5_TEID_UL = rand.nextInt();                             this.S5_TEID_UL_ch = true;
+    this.S5_TEID_DL = rand.nextInt();                             this.S5_TEID_DL_ch = true;
+    this.master_ch = true;
   }
 
   public void cell_reselect() {
-
+    // nothing happens.
   }
 
   public int getStatus() {
@@ -262,7 +278,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     out.writeBoolean(IP_ch);                    if (IP_ch) { out.writeInt(IP); this.IP_ch = false; }
     out.writeBoolean(C_RNTI_ch);                if (C_RNTI_ch) { out.writeShort(C_RNTI); this.C_RNTI_ch = false; }
     out.writeBoolean(eNB_UE_S1AP_ch);           if (eNB_UE_S1AP_ch) { out.writeInt(eNB_UE_S1AP); this.eNB_UE_S1AP_ch = false; }
-    out.writeBoolean(MME_YE_S1AP_ch);           if (MME_YE_S1AP_ch) { out.writeInt(MME_YE_S1AP); this.MME_YE_S1AP_ch = false; }
+    out.writeBoolean(MME_YE_S1AP_ch);           if (MME_YE_S1AP_ch) { out.writeInt(MME_UE_S1AP); this.MME_YE_S1AP_ch = false; }
     out.writeBoolean(OLD_eNB_UE_X2_ch);         if (OLD_eNB_UE_X2_ch) { out.writeInt(OLD_eNB_UE_X2); this.OLD_eNB_UE_X2_ch = false; }
     out.writeBoolean(NEW_eNB_UE_X2_ch);         if (NEW_eNB_UE_X2_ch) { out.writeInt(NEW_eNB_UE_X2); this.NEW_eNB_UE_X2_ch = false; }
     out.writeBoolean(ECI_ch);                   if (ECI_ch) { out.writeInt(ECI); this.ECI_ch = false; }
@@ -296,7 +312,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     if (in.readBoolean()) this.IP = in.readInt();
     if (in.readBoolean()) this.C_RNTI = in.readShort();
     if (in.readBoolean()) this.eNB_UE_S1AP = in.readInt();
-    if (in.readBoolean()) this.MME_YE_S1AP = in.readInt();
+    if (in.readBoolean()) this.MME_UE_S1AP = in.readInt();
     if (in.readBoolean()) this.OLD_eNB_UE_X2 = in.readInt();
     if (in.readBoolean()) this.NEW_eNB_UE_X2 = in.readInt();
     if (in.readBoolean()) this.ECI = in.readInt();

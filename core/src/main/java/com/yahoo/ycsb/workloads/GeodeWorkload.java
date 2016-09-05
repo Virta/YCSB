@@ -403,6 +403,7 @@ public class GeodeWorkload extends Workload {
     do {
       ueRegion.putIfAbsent(ue.getIMSI(), ue);
       out.println(ue.getIMSI());
+      ueIDsAsList.add(ue.getIMSI());
       status = Status.OK;   // TODO: check if we can use the return value from the put above.
       if (status == Status.OK) {
         break;
@@ -464,7 +465,6 @@ public class GeodeWorkload extends Workload {
         break;
       case "INSERT":
         doInsert(db, threadstate);
-        getRegionKeyData();
         break;
       default:
         doDetach();
@@ -517,7 +517,7 @@ public class GeodeWorkload extends Workload {
     Object obj = ueRegion.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
-      ue.S1_handover();
+      ue.handover();
     }
     ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
