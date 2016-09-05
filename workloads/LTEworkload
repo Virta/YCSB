@@ -76,6 +76,8 @@ handover_proportion=0.12
 cell_reselect_proportion=0.7
 session_management_proportion=0.7
 
+geode.locator=localhost[10334]
+
 # On a single scan, the maximum number of records to access
 maxscanlength=1000
 
