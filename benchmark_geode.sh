@@ -40,9 +40,9 @@ fi
 
 for th_counter in $(seq 1 $increment $threads);do
 	if [[ $th_counter -lt 10 ]]; then
-		f_preamble=$preamble$server"_T0$th_counter"
+		f_preamble=$preamble"S"$server"_T0$th_counter"
 	else
-		f_preamble=$preamble$server"_T$th_counter"
+		f_preamble=$preamble"S"$server"_T$th_counter"
 	fi
 
 	if [[ ! -e "$d_path/$f_preamble" ]]; then
@@ -57,4 +57,4 @@ for th_counter in $(seq 1 $increment $threads);do
 	echo "Done with $f_preamble on $(hostname)"
 
 done
-echo "Completed benchmark of $preamble$server on $(hostname)"
+echo "Completed benchmark of $preamble'S'$server on $(hostname)"
