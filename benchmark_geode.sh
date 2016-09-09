@@ -5,7 +5,7 @@ preamble=$2
 threads=$3
 server=$4
 increment=$5
-host=$(hostname | tr '-' '')
+host=$(hostname | tr -d '-')
 
 if [[ ! -e /home/frojala/YCSB/bin/ycsb ]]; then
 	echo "YCSB not found in: /home/frojala/YCSB/bin/ycsb"
