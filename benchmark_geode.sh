@@ -48,7 +48,7 @@ echo "
 		-p hdrhistogram.output.path=$d_path/$f_preamble/hdr_histo_ \
 		-threads $th_counter > $d_path/$f_preamble/"$f_preamble".log
 "
-	echo "Done with $f_preamble"
+	echo "Done with $f_preamble on $(hostname)"
 
 done
-echo "Completed benchmark of $preamble$server"
+echo "Completed benchmark of $preamble$server on $(hostname)"
