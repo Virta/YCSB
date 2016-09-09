@@ -5,6 +5,7 @@ preamble=$2
 threads=$3
 server=$4
 increment=$5
+host=$(hostname | tr '-' '')
 
 if [[ ! -e /home/frojala/YCSB/bin/ycsb ]]; then
 	echo "YCSB not found in: /home/frojala/YCSB/bin/ycsb"
@@ -16,7 +17,7 @@ for to_start in $(seq $((server-$((increment-1)))) 1 $server); do
 	server_port=$((40403+to_start))
 echo "	/home/frojala/apache-geode-src-1.0.0-incubating.M2/geode-assembly/build/install/apache-geode/bin/gfsh\
 		-e "connect" -e "start server \
-		--name=serv-nc3-$to_start \
+		--name=serv-$host-$to_start \
 		--server-port=$server_port \
 		--classpath=/home/frojala/YCSB/core/target/archive-tmp/core-0.11.0-SNAPSHOT.jar"
 "
