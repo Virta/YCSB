@@ -57,4 +57,5 @@ for th_counter in $(seq 1 $increment $threads);do
 	echo "Done with $f_preamble on $(hostname)"
 
 done
-echo "Completed benchmark of $preamble'S'$server on $(hostname)"
+echo "Completed benchmark of "$preamble"S"$server" on $(hostname)"
+
