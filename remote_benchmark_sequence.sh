@@ -25,7 +25,7 @@ while read s i m t e servers; do
 				fi
 			done
 			echo "completed servers: $completed_servers"
-			sleep 10
+			sleep 30
 		done
 	done
 done <<< $@
