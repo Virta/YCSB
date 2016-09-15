@@ -10,7 +10,10 @@ while read s i m t e servers; do
 	num_servers=0
 	for i in $(seq $start $increment $max_servers); do
 		for host in $servers; do
-			ssh $host "/home/frojala/YCSB/start-servers.sh $((i - $((increment-1)))) $i" >> /home/frojala/EXPERIMENTS/$exp/server_start_logs 2>> /home/frojala/EXPERIMENTS/$exp/server_start_error_logs
+			ssh $host mkdir /home/frojala/EXPERIMENTS
+			ssh $host mkdir /home/frojala/EXPERIMENTS/$exp
+			ssh $host "/home/frojala/YCSB/start-servers.sh $((i - $((increment-1)))) $i" 2>&1 | tee /home/frojala/EXPERIMENTS/$exp/server_start_logs
+			echo "Servers $((i - $((increment-1)))) to $i started on $host."
 		done
 		for host in $servers; do
 			ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $threads $i $increment" &
@@ -24,7 +27,7 @@ while read s i m t e servers; do
 					completed_servers=$((completed_servers+1))
 				fi
 			done
-			echo "completed servers: $completed_servers"
+			echo "completed servers: $completed_servers / $num_servers"
 			sleep 30
 		done
 	done

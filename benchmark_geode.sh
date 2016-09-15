@@ -36,9 +36,9 @@ for th_counter in $(seq 1 $increment $threads);do
 	fi
 
 
-#	/home/frojala/YCSB/bin/ycsb run basic -P /home/frojala/YCSB/workloads/LTEworkload -s -t \
-#		-p hdrhistogram.output.path=$d_path/$f_preamble/hdr_histo_ \
-#		-threads $th_counter > $d_path/$f_preamble/"$f_preamble".log
+	/home/frojala/YCSB/bin/ycsb run basic -P /home/frojala/YCSB/workloads/LTEworkload -s -t \
+		-p hdrhistogram.output.path=$d_path/$f_preamble/hdr_histo_ \
+		-threads $th_counter > $d_path/$f_preamble/"$f_preamble".log
 
 	echo "Done with $f_preamble on $(hostname)"
 
