@@ -29,11 +29,10 @@ if [[ ! -e "$d_path/$f_preamble" ]]; then
 	mkdir "$d_path/$f_preamble"
 fi
 
-echo "
 	/home/frojala/YCSB/bin/ycsb run basic -P /home/frojala/YCSB/workloads/LTEworkload -s -t \
 		-p hdrhistogram.output.path=$d_path/$f_preamble/hdr_histo_ \
 		-threads $thread > $d_path/$f_preamble/$f_preamble".log"
-"
+
 echo "Done with $f_preamble on $(hostname)"
 
 echo "Completed benchmark of $preamble "S"$server"_T"$thread on $(hostname)"
