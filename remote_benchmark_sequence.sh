@@ -9,6 +9,7 @@ exp=$5
 function run_benchmark {
    while read server servers; do
 	for th_counter in $(seq 1 $increment $threads); do
+		num_servers=0
                 for host in $servers; do
                         ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $th_counter $server" &
                         num_servers=$((num_servers+1))
@@ -17,12 +18,12 @@ function run_benchmark {
                 while [[ ! $completed_servers -eq $num_servers ]]; do
                         completed_servers=0
                         for host in $servers; do
-                                if ssh $host test -e "/home/frojala/EXPERIMENTS/$exp/$exp"S"$server/$exp"S"$server"T"$th_counter/complete" ; then
+                                if ssh $host test -e "/home/frojala/EXPERIMENTS/$exp/$exp"S"$server/$exp"S"$server"_T"$th_counter/complete" ; then
                                         completed_servers=$((completed_servers+1))
                                 fi
                         done
                         echo -e "\n\n$(date) $exp"S"$server"T"$th_counter: completed servers: $completed_servers / $num_servers.\n\n"
-                        sleep 30
+                        sleep 3
                 done
         done
    done <<< $@
