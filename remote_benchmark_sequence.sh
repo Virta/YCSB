@@ -23,27 +23,27 @@ function run_benchmark {
                                 fi
                         done
                         echo -e "\n\n$(date) $exp"S"$server"T"$th_counter: completed servers: $completed_servers / $num_servers.\n\n"
-                        sleep 3
+                        sleep 30
                 done
         done
    done <<< $@
 }
 
 while read s inc m t e servers; do
-	for host in $servers; do
+echo "	for host in $servers; do
 		ssh $host mkdir /home/frojala/EXPERIMENTS
 		ssh $host mkdir /home/frojala/EXPERIMENTS/$exp
 	done
 
 	run_benchmark 1 $servers
-
+"
 	for server in $(seq $start $increment $max_servers); do
 		num_servers=0
 		for host in $servers; do
 			date
 			ssh $host "/home/frojala/YCSB/start-servers.sh $((server - $((increment-1)))) $server" 2>&1 | tee /home/frojala/EXPERIMENTS/$exp/server_start_logs
 			date
-			echo "Servers $((server - $((increment-1)))) to $server started on $host."
+			echo -e "\n\nServers $((server - $((increment-1)))) to $server started on $host.\n\n"
 		done
 		ssh nc-3 '/home/frojala/apache-geode-src-1.0.0-incubating.M2/geode-assembly/build/install/apache-geode/bin/gfsh -e "connect" -e "rebalance"'
 	   date
