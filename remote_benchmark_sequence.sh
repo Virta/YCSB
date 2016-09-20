@@ -5,7 +5,7 @@ increment=$2
 max_servers=$3
 threads=$4
 exp=$5
-server_list
+server_list=
 
 function run_benchmark {
    while read server servers; do
