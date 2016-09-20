@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class UE implements com.gemstone.gemfire.Delta, Serializable {
+public class UE implements Serializable {
+//public class UE implements com.gemstone.gemfire.Delta, Serializable {
   /**
    *  Static entity codes, will never change in this benchmark.
    */
@@ -264,12 +265,12 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     return s;
   }
 
-  @Override
+//  @Override
   public boolean hasDelta() {
     return master_ch;
   }
 
-  @Override
+//  @Override
   public void toDelta(DataOutput out) throws IOException {
     out.writeBoolean(status_ch);                if (status_ch){ out.writeByte(status); this.status_ch = false; }
     out.writeBoolean(M_TMSI_ch);                if (M_TMSI_ch) { out.writeInt(M_TMSI); this.M_TMSI_ch = false; }
@@ -303,7 +304,7 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
     this.master_ch = false;
   }
 
-  @Override
+//  @Override
   public void fromDelta(DataInput in) throws IOException, InvalidDeltaException {
     if (in.readBoolean()) this.status = in.readByte();
     if (in.readBoolean()) this.M_TMSI = in.readInt();
