@@ -26,6 +26,7 @@ function run_benchmark {
                         done
                         echo -e "\n\n$(date) $exp"S"$server"T"$th_counter: completed servers: $completed_servers / $num_servers.\n\n"
                 done
+		ssh frojala@cs@shell.cs.helsinki.fi echo "Done: $exp"S"$server"_T"$th_counter" >> ~/public_html/experiments
         done
    done <<< $@
 }
