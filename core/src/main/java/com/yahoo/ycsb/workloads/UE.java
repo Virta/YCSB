@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class UE implements Serializable {
-//public class UE implements com.gemstone.gemfire.Delta, Serializable {
+//public class UE implements Serializable {
+public class UE implements com.gemstone.gemfire.Delta, Serializable {
   /**
    *  Static entity codes, will never change in this benchmark.
    */
