@@ -6,6 +6,7 @@ host=$(hostname | tr -d '-')
 
 for to_start in $(seq $start $max_servers); do
         if [[ $to_start -eq 0 ]]; then continue; fi
+	if [[ $to_start -eq 1 ]]; then continue; fi
 
         server_port=$((40403+to_start))
 	open=$(nc -z localhost $server_port; echo $?)
