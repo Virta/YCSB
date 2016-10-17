@@ -105,11 +105,11 @@ public class UE implements com.gemstone.gemfire.Delta, Serializable {
   private transient boolean K_RRCenc_ch;
   private transient boolean K_UPenc_ch;
 
-  public UE() {
+  public UE(String IMSI) {
     Random rand = new Random();
     this.IMEI = randomString(15, rand);
-    this.MSIN = randomString(10, rand);
-    this.IMSI = PLMN_ID + MSIN;
+    this.IMSI = IMSI;
+    this.MSIN = IMSI.substring(6);
     this.EPS_KEY = randomString(8, rand);
     this.Cipher_KEY = randomString(8, rand);
     this.Encryption_KEY = randomString(8, rand);

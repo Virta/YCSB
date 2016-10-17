@@ -253,6 +253,7 @@ public class GeodeWorkload extends Workload {
   BufferedWriter bw;
   PrintWriter out;
   String outfilepath = "UEIDfile";
+  int ueIDindex = 0;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -396,38 +397,16 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doInsert(DB db, Object threadstate) {
-    UE ue = new UE();
-    while (ueRegion.get(ue.getIMSI()) != null) ue = new UE();
-    Status status;
-    int numOfRetries = 0;
-    do {
-      ueRegion.putIfAbsent(ue.getIMSI(), ue);
-      out.println(ue.getIMSI());
-      if (ueIDsAsList != null) ueIDsAsList.add(ue.getIMSI());
-      status = Status.OK;   // TODO: check if we can use the return value from the put above.
-      if (status == Status.OK) {
-        break;
-      }
-      // Retry if configured. Without retrying, the load process will fail
-      // even if one single insertion fails. User can optionally configure
-      // an insertion retry limit (default is 0) to enable retry.
-      if (++numOfRetries <= insertionRetryLimit) {
-        System.err.println("Retrying insertion, retry count: " + numOfRetries);
-        try {
-          // Sleep for a random number between [0.8, 1.2)*insertionRetryInterval.
-          int sleepTime = (int) (1000 * insertionRetryInterval * (0.8 + 0.4 * Math.random()));
-          Thread.sleep(sleepTime);
-        } catch (InterruptedException e) {
-          break;
-        }
+    if (ueIDsAsList == null) {
+      getRegionKeyData();
+    }
 
-      } else {
-        System.err.println("Error inserting, not retrying any more. number of attempts: " + numOfRetries +
-          "Insertion Retry Limit: " + insertionRetryLimit);
-        break;
+    String IMSI = ueIDsAsList.get(ueIDindex);
+    UE ue = new UE(IMSI);
+    ueRegion.put(IMSI, ue);
+    ueIDindex++;
 
-      }
-    } while (true);
+    Status status = Status.OK;
 
     return (status == Status.OK);
   }
