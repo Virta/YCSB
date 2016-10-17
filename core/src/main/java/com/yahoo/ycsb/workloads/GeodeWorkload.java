@@ -250,6 +250,7 @@ public class GeodeWorkload extends Workload {
    * Keep the region object at hand so it does not have to be created each time, saves on time.
    */
   private Region<String, UE> ueRegion;
+  private Region<String, UE> ueHAC;
   /**
    * Keep the ueIDs as a list, so it can be indexed fast, used for choosing the next UE at random.
    */
@@ -262,6 +263,7 @@ public class GeodeWorkload extends Workload {
   String outfilepath = "UEIDfile";
   int ueIDindex = 0;
   String HACgroupNumber;
+  boolean HACzoning = false;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -357,6 +359,7 @@ public class GeodeWorkload extends Workload {
       serverHost = props.getProperty(SERVERHOST_PROPERTY_NAME, SERVERHOST_PROPERTY_DEFAULT);
       locatorStr = props.getProperty(LOCATOR_PROPERTY_NAME, LOCATOR_PROPERTY_NAME_DEFAULT);
       HACgroupNumber = props.getProperty(HAC_GROUP_NUMBER, HAC_GROUP_NUMBER_DEFAULT);
+      HACzoning = !HACgroupNumber.isEmpty();
 
       String topology = props.getProperty(TOPOLOGY_PROPERTY_NAME);
       if (topology != null && topology.equals(TOPOLOGY_P2P_VALUE)) {
@@ -365,7 +368,12 @@ public class GeodeWorkload extends Workload {
           cf.set("locators", locatorStr);
         }
         cache = cf.create();
-        ueRegion = getRegion(table);
+        if (HACzoning) {
+          ueRegion = getRegion(table);
+          ueHAC = getRegion(table + "_" + HACgroupNumber);
+        } else {
+          ueHAC = getRegion(table);
+        }
         isClient = false;
         return null;
       }
@@ -382,7 +390,12 @@ public class GeodeWorkload extends Workload {
       ccf.addPoolLocator(locator.getHost().getCanonicalHostName(), locator.getPort());
     }
     cache = ccf.create();
-    ueRegion = getRegion(table);
+    if (HACzoning) {
+      ueRegion = getRegion(table);
+      ueHAC = getRegion(table + "_" + HACgroupNumber);
+    } else {
+      ueHAC = getRegion(table);
+    }
 //    try{
 //      fw = new FileWriter(outfilepath, true);
 //      bw = new BufferedWriter(fw);
@@ -395,13 +408,13 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public void cleanup() throws WorkloadException {
-    out.close();
-    try {
-      bw.close();
-      fw.close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+//    out.close();
+//    try {
+//      bw.close();
+//      fw.close();
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
   }
 
   @Override
@@ -412,7 +425,8 @@ public class GeodeWorkload extends Workload {
 
     String IMSI = ueIDsAsList.get(ueIDindex);
     UE ue = new UE(IMSI);
-    ueRegion.put(IMSI, ue);
+    ueHAC.put(IMSI, ue);
+    if (HACzoning) ueRegion.put(IMSI, ue);
     ueIDindex++;
 
     Status status = Status.OK;
@@ -462,7 +476,8 @@ public class GeodeWorkload extends Workload {
 
   private synchronized void getRegionKeyData() {
     try {
-      ueIDsAsList = Files.readAllLines(Paths.get(outfilepath + HACgroupNumber), Charset.defaultCharset());
+      if (HACzoning) ueIDsAsList = Files.readAllLines(Paths.get(outfilepath + "_" + HACgroupNumber), Charset.defaultCharset());
+      else ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
     } catch (Exception e) {
       System.out.println("Could not read from ueID file: " + e.getMessage());
     }
@@ -472,12 +487,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.session_management();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
     _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
@@ -487,12 +503,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.cell_reselect();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start));
     _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start));
@@ -502,12 +519,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.handover();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
     _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
@@ -517,12 +535,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.tracking_area_update();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(TAU_OPERATION, (int) (end - start));
     _measurements.measureIntended(TAU_OPERATION, (int) (end - start));
@@ -532,12 +551,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.S1_release();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start));
     _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start));
@@ -547,12 +567,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.service_request();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start));
     _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start));
@@ -562,12 +583,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.detach();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(DETACH_OPERATION, (int) (end - start));
     _measurements.measureIntended(DETACH_OPERATION, (int) (end - start));
@@ -577,12 +599,13 @@ public class GeodeWorkload extends Workload {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
-    Object obj = ueRegion.get(ueID);
+    Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue != null) {
       ue.initial_attach();
     }
-    ueRegion.put(ueID, ue);
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
     long end = System.currentTimeMillis();
     _measurements.measure(ATTACH_OPERATION, (int) (end - start));
     _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start));
@@ -628,23 +651,23 @@ public class GeodeWorkload extends Workload {
   }
 
   private Region<String, UE> getRegion(String table) {
-    Region<String, UE> r = cache.getRegion(table);
-    if (r == null) {
+    Region<String, UE> region = cache.getRegion(table);
+    if (region == null) {
       try {
         if (isClient) {
           ClientRegionFactory<String, UE> crf =
             ((ClientCache) cache).createClientRegionFactory(ClientRegionShortcut.PROXY);
-          r = crf.create(table);
+          region = crf.create(table);
         } else {
           RegionFactory<String, UE> rf = ((Cache) cache).createRegionFactory(RegionShortcut.PARTITION);
-          r = rf.create(table);
+          region = rf.create(table);
         }
       } catch (RegionExistsException e) {
         // another thread created the region
-        r = cache.getRegion(table);
+        region = cache.getRegion(table);
       }
     }
-    return r;
+    return region;
   }
 
 }
