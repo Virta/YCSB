@@ -25,7 +25,7 @@ public class GeodeWorkload extends Workload {
   /**
    * The name of the database table to run queries against.
    */
-  public static final String TABLENAME_PROPERTY = "table";
+  public static final String TABLENAME_PROPERTY = "table.name";
   public static final String TABLENAME_PROPERTY_DEFAULT = "usertable";
   public static String table;
 
@@ -221,6 +221,7 @@ public class GeodeWorkload extends Workload {
    * client server and p2p topology
    */
   private static final String LOCATOR_PROPERTY_NAME = "geode.locator";
+  private static final String LOCATOR_PROPERTY_NAME_DEFAULT = "localhost[10334]";
 
   /**
    * property name to specify Geode topology.
@@ -232,6 +233,12 @@ public class GeodeWorkload extends Workload {
    * (client-server topology is default)
    */
   private static final String TOPOLOGY_P2P_VALUE = "p2p";
+
+  /**
+   * The number of the current high-availability and consistency zone group.
+   */
+  private static final String HAC_GROUP_NUMBER = "geode.hacgroup";
+  private static final String HAC_GROUP_NUMBER_DEFAULT = "";
 
   private GemFireCache cache;
 
@@ -254,6 +261,7 @@ public class GeodeWorkload extends Workload {
   PrintWriter out;
   String outfilepath = "UEIDfile";
   int ueIDindex = 0;
+  String HACgroupNumber;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -347,7 +355,8 @@ public class GeodeWorkload extends Workload {
         serverPort = Integer.parseInt(serverPortStr);
       }
       serverHost = props.getProperty(SERVERHOST_PROPERTY_NAME, SERVERHOST_PROPERTY_DEFAULT);
-      locatorStr = props.getProperty(LOCATOR_PROPERTY_NAME);
+      locatorStr = props.getProperty(LOCATOR_PROPERTY_NAME, LOCATOR_PROPERTY_NAME_DEFAULT);
+      HACgroupNumber = props.getProperty(HAC_GROUP_NUMBER, HAC_GROUP_NUMBER_DEFAULT);
 
       String topology = props.getProperty(TOPOLOGY_PROPERTY_NAME);
       if (topology != null && topology.equals(TOPOLOGY_P2P_VALUE)) {
@@ -374,13 +383,13 @@ public class GeodeWorkload extends Workload {
     }
     cache = ccf.create();
     ueRegion = getRegion(table);
-    try{
-      fw = new FileWriter(outfilepath, true);
-      bw = new BufferedWriter(fw);
-      out = new PrintWriter(bw);
-    } catch (IOException e) {
-      System.out.println("Could not open file for writing: " + e.getMessage());
-    }
+//    try{
+//      fw = new FileWriter(outfilepath, true);
+//      bw = new BufferedWriter(fw);
+//      out = new PrintWriter(bw);
+//    } catch (IOException e) {
+//      System.out.println("Could not open file for writing: " + e.getMessage());
+//    }
     return null;
   }
 
@@ -453,7 +462,7 @@ public class GeodeWorkload extends Workload {
 
   private synchronized void getRegionKeyData() {
     try {
-      ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
+      ueIDsAsList = Files.readAllLines(Paths.get(outfilepath + HACgroupNumber), Charset.defaultCharset());
     } catch (Exception e) {
       System.out.println("Could not read from ueID file: " + e.getMessage());
     }

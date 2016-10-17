@@ -104,7 +104,7 @@ hotspotopnfraction=0.8
 #maxexecutiontime=
 
 # The name of the database table to run queries against
-table=usertable
+table.name=usertable
 
 # The column family of fields (required by some databases)
 #columnfamily=
