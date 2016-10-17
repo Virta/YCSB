@@ -415,6 +415,7 @@ public class GeodeWorkload extends Workload {
 //    } catch (IOException e) {
 //      e.printStackTrace();
 //    }
+    cache.close();
   }
 
   @Override
