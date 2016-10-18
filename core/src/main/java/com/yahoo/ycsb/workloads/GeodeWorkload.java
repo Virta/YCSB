@@ -2,10 +2,7 @@ package com.yahoo.ycsb.workloads;
 
 import com.gemstone.gemfire.CopyHelper;
 import com.gemstone.gemfire.cache.*;
-import com.gemstone.gemfire.cache.client.ClientCache;
-import com.gemstone.gemfire.cache.client.ClientCacheFactory;
-import com.gemstone.gemfire.cache.client.ClientRegionFactory;
-import com.gemstone.gemfire.cache.client.ClientRegionShortcut;
+import com.gemstone.gemfire.cache.client.*;
 import com.gemstone.gemfire.internal.admin.remote.DistributionLocatorId;
 import com.yahoo.ycsb.*;
 import com.yahoo.ycsb.generator.*;
@@ -264,6 +261,7 @@ public class GeodeWorkload extends Workload {
   int ueIDindex = 0;
   String HACgroupNumber;
   boolean HACzoning = false;
+  String groupName = "HAC-group_";
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -360,39 +358,33 @@ public class GeodeWorkload extends Workload {
       locatorStr = props.getProperty(LOCATOR_PROPERTY_NAME, LOCATOR_PROPERTY_NAME_DEFAULT);
       HACgroupNumber = props.getProperty(HAC_GROUP_NUMBER, HAC_GROUP_NUMBER_DEFAULT);
       HACzoning = !HACgroupNumber.isEmpty();
+    } else {
+      throw new WorkloadException("No properties found!");
+    }
 
-      String topology = props.getProperty(TOPOLOGY_PROPERTY_NAME);
-      if (topology != null && topology.equals(TOPOLOGY_P2P_VALUE)) {
-        CacheFactory cf = new CacheFactory();
-        if (locatorStr != null) {
-          cf.set("locators", locatorStr);
-        }
-        cache = cf.create();
-        if (HACzoning) {
-          ueRegion = getRegion(table);
-          ueHAC = getRegion(table + "_" + HACgroupNumber);
-        } else {
-          ueHAC = getRegion(table);
-        }
-        isClient = false;
-        return null;
-      }
+    DistributionLocatorId locator = new DistributionLocatorId(locatorStr);
+    CacheFactory cacheFactory = new CacheFactory();
+    cacheFactory.set("locators", locatorStr);
+    cache = cacheFactory.create();
+
+    String topology = props.getProperty(TOPOLOGY_PROPERTY_NAME);
+    if (topology != null && topology.equals(TOPOLOGY_P2P_VALUE)) {
+      isClient = false;
+    } else {
+      isClient = true;
     }
-    isClient = true;
-    DistributionLocatorId locator = null;
-    if (locatorStr != null) {
-      locator = new DistributionLocatorId(locatorStr);
-    }
-    ClientCacheFactory ccf = new ClientCacheFactory();
-    if (serverPort != 0) {
-      ccf.addPoolServer(serverHost, serverPort);
-    } else if (locator != null) {
-      ccf.addPoolLocator(locator.getHost().getCanonicalHostName(), locator.getPort());
-    }
-    cache = ccf.create();
+
     if (HACzoning) {
+      PoolFactory poolFactory = PoolManager.createFactory();
+      poolFactory.addLocator(locator.getHost().getCanonicalHostName(), locator.getPort()).setServerGroup(groupName + HACgroupNumber);
+      Pool pool = PoolManager.find(groupName + HACgroupNumber);
+      if (pool == null) {
+        pool = poolFactory.create(groupName + HACgroupNumber);
+      }
+      RegionFactory regionFactory = ((Cache) cache).createRegionFactory(RegionShortcut.REPLICATE_PROXY).setPoolName(groupName + HACgroupNumber);
+
+      ueHAC = regionFactory.create(table + "_" + HACgroupNumber);
       ueRegion = getRegion(table);
-      ueHAC = getRegion(table + "_" + HACgroupNumber);
     } else {
       ueHAC = getRegion(table);
     }
