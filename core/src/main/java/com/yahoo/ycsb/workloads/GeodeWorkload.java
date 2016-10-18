@@ -381,13 +381,21 @@ public class GeodeWorkload extends Workload {
       if (pool == null) {
         try {
           pool = poolFactory.create(groupName + HACgroupNumber);
-        } catch (Exception e) {
-          System.out.println(e.getMessage());
+        } catch (IllegalStateException e) {
+          pool = PoolManager.find(groupName + HACgroupNumber);
         }
       }
-      RegionFactory regionFactory = ((Cache) cache).createRegionFactory(RegionShortcut.REPLICATE_PROXY).setPoolName(groupName + HACgroupNumber);
 
-      ueHAC = regionFactory.create(table + "_" + HACgroupNumber);
+      RegionFactory regionFactory = ((Cache) cache).createRegionFactory(RegionShortcut.REPLICATE_PROXY).setPoolName(groupName + HACgroupNumber);
+      ueHAC = cache.getRegion(table + "_" + HACgroupNumber);
+      if (ueHAC == null) {
+        try {
+          ueHAC = regionFactory.create(table + "_" + HACgroupNumber);
+        } catch (RegionExistsException e) {
+          ueHAC = cache.getRegion(table + "_" + HACgroupNumber);
+        }
+      }
+
       ueRegion = getRegion(table);
     } else {
       ueHAC = getRegion(table);
