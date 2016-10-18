@@ -379,7 +379,11 @@ public class GeodeWorkload extends Workload {
       poolFactory.addLocator(locator.getHost().getCanonicalHostName(), locator.getPort()).setServerGroup(groupName + HACgroupNumber);
       Pool pool = PoolManager.find(groupName + HACgroupNumber);
       if (pool == null) {
-        pool = poolFactory.create(groupName + HACgroupNumber);
+        try {
+          pool = poolFactory.create(groupName + HACgroupNumber);
+        } catch (Exception e) {
+          System.out.println(e.getMessage());
+        }
       }
       RegionFactory regionFactory = ((Cache) cache).createRegionFactory(RegionShortcut.REPLICATE_PROXY).setPoolName(groupName + HACgroupNumber);
 
