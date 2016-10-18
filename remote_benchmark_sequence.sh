@@ -4,7 +4,7 @@ start=$1
 increment=$2
 max_servers=$3
 threads=$4
-exp=$5
+exp=
 server_list=
 
 function run_benchmark {
@@ -12,8 +12,8 @@ function run_benchmark {
 	for th_counter in $(seq 1 $increment $threads); do
 		num_servers=0
                 for host in $servers; do
-                        ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $th_counter $server" &
                         num_servers=$((num_servers+1))
+                        ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $th_counter $server $num_servers" &
                 done
                 completed_servers=0
                 while [[ ! $completed_servers -eq $num_servers ]]; do
@@ -33,6 +33,7 @@ function run_benchmark {
 
 while read s inc m t e servers; do
 	server_list=$servers
+	exp="E$(echo $servers | wc -w)"
 	for host in $server_list; do
 		ssh $host mkdir /home/frojala/EXPERIMENTS
 		ssh $host mkdir /home/frojala/EXPERIMENTS/$exp
@@ -41,10 +42,11 @@ while read s inc m t e servers; do
 	run_benchmark 1 $server_list
 
 	for server in $(seq $start $increment $max_servers); do
-		num_servers=0
+		num_servers_HAC=0
 		for host in $server_list; do
+			num_servers_HAC=$((num_servers_HAC + 1))
 			date
-			ssh $host "/home/frojala/YCSB/start-servers.sh $((server - $((increment-1)))) $server" 2>&1 | tee /home/frojala/EXPERIMENTS/$exp/server_start_logs
+			ssh $host "/home/frojala/YCSB/start-servers.sh $((server - $((increment-1)))) $server $num_servers_HAC" 2>&1 | tee /home/frojala/EXPERIMENTS/$exp/server_start_logs
 			date
 			echo -e "\n\nServers $((server - $((increment-1)))) to $server started on $host.\n\n"
 		done
