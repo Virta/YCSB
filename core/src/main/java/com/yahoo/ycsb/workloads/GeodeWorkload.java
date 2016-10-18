@@ -267,6 +267,8 @@ public class GeodeWorkload extends Workload {
   String groupNameBase = "HAC-group_";
   int maxHACzones;
   DistributionLocatorId locator;
+  int originalUEIDlistSize;
+  boolean firstTransaction = true;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -434,9 +436,7 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doInsert(DB db, Object threadstate) {
-    if (ueIDsAsList == null) {
-      getRegionKeyData();
-    }
+    getRegionKeyData();
 
     String IMSI = ueIDsAsList.get(ueIDindex);
     UE ue = new UE(IMSI);
@@ -451,10 +451,10 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
-    if (ueIDsAsList == null) {
-      getRegionKeyData();
-    }
-    if (HACzoning) {
+    getRegionKeyData();
+
+    if (HACzoning && (ueIDsAsList.size() / originalUEIDlistSize) < 0.9 || firstTransaction) {
+      firstTransaction = false;
       Set<String> keySetOnServer = ueHAC.keySetOnServer();
       ueIDsAsList = new ArrayList<>();
       ueIDsAsList.addAll(keySetOnServer);
@@ -495,11 +495,14 @@ public class GeodeWorkload extends Workload {
   }
 
   private synchronized void getRegionKeyData() {
-    try {
-      if (HACzoning) ueIDsAsList = Files.readAllLines(Paths.get(outfilepath + "_" + HACgroupNumber), Charset.defaultCharset());
-      else ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
-    } catch (Exception e) {
-      System.out.println("Could not read from ueID file: " + e.getMessage());
+    if (ueIDsAsList == null) {
+      try {
+        if (HACzoning) ueIDsAsList = Files.readAllLines(Paths.get(outfilepath + "_" + HACgroupNumber), Charset.defaultCharset());
+        else ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
+      } catch (Exception e) {
+        System.out.println("Could not read from ueID file: " + e.getMessage());
+      }
+      originalUEIDlistSize = ueIDsAsList.size();
     }
   }
 
