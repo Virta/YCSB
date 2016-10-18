@@ -235,7 +235,10 @@ public class GeodeWorkload extends Workload {
    * The number of the current high-availability and consistency zone group.
    */
   private static final String HAC_GROUP_NUMBER = "geode.hacgroup";
-  private static final String HAC_GROUP_NUMBER_DEFAULT = "";
+  private static final String HAC_GROUP_NUMBER_DEFAULT = "-1";
+
+  private static final String MAX_HAC_GROUPS = "geode.maxHACgroups";
+  private static final String MAX_HAC_GROUPS_DEFAULT = "0";
 
   private GemFireCache cache;
 
@@ -259,9 +262,11 @@ public class GeodeWorkload extends Workload {
   PrintWriter out;
   String outfilepath = "UEIDfile";
   int ueIDindex = 0;
-  String HACgroupNumber;
+  int HACgroupNumber;
   boolean HACzoning = false;
-  String groupName = "HAC-group_";
+  String groupNameBase = "HAC-group_";
+  int maxHACzones;
+  DistributionLocatorId locator;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -356,13 +361,14 @@ public class GeodeWorkload extends Workload {
       }
       serverHost = props.getProperty(SERVERHOST_PROPERTY_NAME, SERVERHOST_PROPERTY_DEFAULT);
       locatorStr = props.getProperty(LOCATOR_PROPERTY_NAME, LOCATOR_PROPERTY_NAME_DEFAULT);
-      HACgroupNumber = props.getProperty(HAC_GROUP_NUMBER, HAC_GROUP_NUMBER_DEFAULT);
-      HACzoning = !HACgroupNumber.isEmpty();
+      HACgroupNumber = Integer.parseInt(props.getProperty(HAC_GROUP_NUMBER, HAC_GROUP_NUMBER_DEFAULT));
+      HACzoning = (HACgroupNumber != Integer.parseInt(HAC_GROUP_NUMBER_DEFAULT));
+      maxHACzones = Integer.parseInt(props.getProperty(MAX_HAC_GROUPS, MAX_HAC_GROUPS_DEFAULT));
     } else {
       throw new WorkloadException("No properties found!");
     }
 
-    DistributionLocatorId locator = new DistributionLocatorId(locatorStr);
+    locator = new DistributionLocatorId(locatorStr);
     CacheFactory cacheFactory = new CacheFactory();
     cacheFactory.set("locators", locatorStr);
     cache = cacheFactory.create();
@@ -375,27 +381,7 @@ public class GeodeWorkload extends Workload {
     }
 
     if (HACzoning) {
-      PoolFactory poolFactory = PoolManager.createFactory();
-      poolFactory.addLocator(locator.getHost().getCanonicalHostName(), locator.getPort()).setServerGroup(groupName + HACgroupNumber);
-      Pool pool = PoolManager.find(groupName + HACgroupNumber);
-      if (pool == null) {
-        try {
-          pool = poolFactory.create(groupName + HACgroupNumber);
-        } catch (IllegalStateException e) {
-          pool = PoolManager.find(groupName + HACgroupNumber);
-        }
-      }
-
-      RegionFactory regionFactory = ((Cache) cache).createRegionFactory(RegionShortcut.REPLICATE_PROXY).setPoolName(groupName + HACgroupNumber);
-      ueHAC = cache.getRegion(table + "_" + HACgroupNumber);
-      if (ueHAC == null) {
-        try {
-          ueHAC = regionFactory.create(table + "_" + HACgroupNumber);
-        } catch (RegionExistsException e) {
-          ueHAC = cache.getRegion(table + "_" + HACgroupNumber);
-        }
-      }
-
+      ueHAC = getHACregion(groupNameBase + HACgroupNumber, table + "_" + HACgroupNumber);
       ueRegion = getRegion(table);
     } else {
       ueHAC = getRegion(table);
@@ -408,6 +394,30 @@ public class GeodeWorkload extends Workload {
 //      System.out.println("Could not open file for writing: " + e.getMessage());
 //    }
     return null;
+  }
+
+  private Region<String, UE> getHACregion(String poolName, String table) {
+    PoolFactory poolFactory = PoolManager.createFactory();
+    poolFactory.addLocator(locator.getHost().getCanonicalHostName(), locator.getPort()).setServerGroup(poolName);
+    Pool pool = PoolManager.find(poolName);
+    if (pool == null) {
+      try {
+        pool = poolFactory.create(poolName);
+      } catch (IllegalStateException e) {
+        pool = PoolManager.find(poolName);
+      }
+    }
+
+    RegionFactory regionFactory = ((Cache) cache).createRegionFactory(RegionShortcut.REPLICATE_PROXY).setPoolName(poolName);
+    Region<String, UE> HACregion = cache.getRegion(table);
+    if (ueHAC == null) {
+      try {
+        HACregion = regionFactory.create(table);
+      } catch (RegionExistsException e) {
+        HACregion = cache.getRegion(table);
+      }
+    }
+    return HACregion;
   }
 
   @Override
@@ -522,6 +532,8 @@ public class GeodeWorkload extends Workload {
 
   private void doHandover() {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
+    int nextHACzoneNumber = HACgroupNumber;
+    while (nextHACzoneNumber == HACgroupNumber) nextHACzoneNumber = random.nextInt(maxHACzones) + 1;
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
     Object obj = ueHAC.get(ueID);
@@ -529,8 +541,15 @@ public class GeodeWorkload extends Workload {
     if (ue != null) {
       ue.handover();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
+    if (HACzoning) {
+      Region<String, UE> nextHACzone = getHACregion(groupNameBase + nextHACzoneNumber, table + nextHACzoneNumber);
+      nextHACzone.put(ueID, ue);
+      ueRegion.put(ueID, ue);
+      ueHAC.remove(ueID);
+      nextHACzone.close();
+    } else {
+      ueHAC.put(ueID, ue);
+    }
     long end = System.currentTimeMillis();
     _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
     _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
