@@ -454,6 +454,11 @@ public class GeodeWorkload extends Workload {
     if (ueIDsAsList == null) {
       getRegionKeyData();
     }
+    if (HACzoning) {
+      Set<String> keySetOnServer = ueHAC.keySetOnServer();
+      ueIDsAsList = new ArrayList<>();
+      ueIDsAsList.addAll(keySetOnServer);
+    }
 
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
@@ -542,7 +547,7 @@ public class GeodeWorkload extends Workload {
       ue.handover();
     }
     if (HACzoning) {
-      Region<String, UE> nextHACzone = getHACregion(groupNameBase + nextHACzoneNumber, table + nextHACzoneNumber);
+      Region<String, UE> nextHACzone = getHACregion(groupNameBase + nextHACzoneNumber, table + "_" + nextHACzoneNumber);
       nextHACzone.put(ueID, ue);
       ueRegion.put(ueID, ue);
       ueHAC.remove(ueID);
@@ -553,6 +558,7 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
     _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
+    ueIDsAsList.remove(ueID);
   }
 
   private void doTrackingAreaUpdate() {
