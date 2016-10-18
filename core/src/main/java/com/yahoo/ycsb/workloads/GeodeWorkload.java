@@ -410,7 +410,7 @@ public class GeodeWorkload extends Workload {
 
     RegionFactory regionFactory = ((Cache) cache).createRegionFactory(RegionShortcut.REPLICATE_PROXY).setPoolName(poolName);
     Region<String, UE> HACregion = cache.getRegion(table);
-    if (ueHAC == null) {
+    if (HACregion == null) {
       try {
         HACregion = regionFactory.create(table);
       } catch (RegionExistsException e) {
