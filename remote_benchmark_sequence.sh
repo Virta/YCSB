@@ -31,7 +31,7 @@ function run_benchmark {
    done <<< $@
 }
 
-while read s inc m t e servers; do
+while read s inc m t servers; do
 	server_list=$servers
 	exp="E$(echo $servers | wc -w)"
 	for host in $server_list; do
