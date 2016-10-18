@@ -5,6 +5,7 @@ preamble=$2
 thread=$3
 server=$4
 HAC=$5
+HACs=$6
 host=$(hostname | tr -d '-')
 
 cd /home/frojala/YCSB
@@ -30,7 +31,7 @@ if [[ ! -e "$d_path/$f_preamble" ]]; then
 	mkdir "$d_path/$f_preamble"
 fi
 
-	/home/frojala/YCSB/bin/ycsb run basic -P /home/frojala/YCSB/workloads/LTEworkloadHAC -p geode.hacgroup=$HAC -s -t \
+	/home/frojala/YCSB/bin/ycsb run basic -P /home/frojala/YCSB/workloads/LTEworkloadHAC -p geode.hacgroup=$HAC -p geode.maxHACgroups=$HACs -s -t \
 		-p hdrhistogram.output.path=$d_path/$f_preamble/hdr_histo_ \
 		-threads $thread > $d_path/$f_preamble/$f_preamble".log"
 

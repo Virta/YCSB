@@ -8,12 +8,12 @@ exp=
 server_list=
 
 function run_benchmark {
-   while read server servers; do
+   while read server HACs servers; do
 	for th_counter in $(seq 1 $increment $threads); do
 		num_servers=0
                 for host in $servers; do
                         num_servers=$((num_servers+1))
-                        ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $th_counter $server $num_servers" &
+                        ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $th_counter $server $num_servers $HACs" &
                 done
                 completed_servers=0
                 while [[ ! $completed_servers -eq $num_servers ]]; do
@@ -33,13 +33,14 @@ function run_benchmark {
 
 while read s inc m t servers; do
 	server_list=$servers
-	exp="E$(echo $servers | wc -w)"
+	HACs=$(echo $servers | wc -w)
+	exp=E$HACs
 	for host in $server_list; do
 		ssh $host mkdir /home/frojala/EXPERIMENTS
 		ssh $host mkdir /home/frojala/EXPERIMENTS/$exp
 	done
 
-	run_benchmark 1 $server_list
+	run_benchmark 1 $HACs $server_list
 
 	for server in $(seq $start $increment $max_servers); do
 		num_servers_HAC=0
@@ -52,6 +53,6 @@ while read s inc m t servers; do
 		done
 		ssh nc-3 '/home/frojala/apache-geode-src-1.0.0-incubating.M2/geode-assembly/build/install/apache-geode/bin/gfsh -e "connect" -e "rebalance"'
 		date
-		run_benchmark $server $server_list
+		run_benchmark $server $HACs $server_list
 	done
 done <<< $@
