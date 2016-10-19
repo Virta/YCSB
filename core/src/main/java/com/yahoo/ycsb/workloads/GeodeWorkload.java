@@ -275,6 +275,7 @@ public class GeodeWorkload extends Workload {
   ReadWriteLock lock;
   Lock rLock;
   Lock wLock;
+  int ueIDsAsListSize;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -498,6 +499,7 @@ public class GeodeWorkload extends Workload {
       Set<String> keySetOnServer = ueHAC.keySetOnServer();
       ueIDsAsList = new ArrayList<>();
       ueIDsAsList.addAll(keySetOnServer);
+      ueIDsAsListSize = ueIDsAsList.size();
     } finally {
       wLock.unlock();
     }
@@ -519,31 +521,34 @@ public class GeodeWorkload extends Workload {
   }
 
   private boolean doSessionManagement(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
-      String ueID = ueIDsAsList.get(ueIDindex);
-      long start = System.currentTimeMillis();
-      Object obj = ueHAC.get(ueID);
-      UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
-      ue.session_management();
-      ueHAC.put(ueID, ue);
-      if (HACzoning) ueRegion.put(ueID, ue);
-      long end = System.currentTimeMillis();
-      _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
-      _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
     } finally {
       rLock.unlock();
     }
+    long start = System.currentTimeMillis();
+    Object obj = ueHAC.get(ueID);
+    UE ue = (UE) CopyHelper.copy(obj);
+    if (ue == null) return false;
+    ue.session_management();
+    ueHAC.put(ueID, ue);
+    if (HACzoning) ueRegion.put(ueID, ue);
+    long end = System.currentTimeMillis();
+    _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
+    _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
     return true;
   }
 
   private boolean doCellReSelection(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
-      String ueID = ueIDsAsList.get(ueIDindex);
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
+    } finally {
+      rLock.unlock();
+    }
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
@@ -554,19 +559,19 @@ public class GeodeWorkload extends Workload {
       long end = System.currentTimeMillis();
       _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start));
       _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start));
-    } finally {
-      rLock.unlock();
-    }
     return true;
   }
 
   private boolean doHandover(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
+    } finally {
+      rLock.unlock();
+    }
       int nextHACzoneNumber = HACgroupNumber;
       while (nextHACzoneNumber == HACgroupNumber) nextHACzoneNumber = random.nextInt(maxHACzones) + 1;
-      String ueID = ueIDsAsList.get(ueIDindex);
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
@@ -589,17 +594,18 @@ public class GeodeWorkload extends Workload {
       long end = System.currentTimeMillis();
       _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
       _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
-    } finally {
-      rLock.unlock();
-    }
+
     return true;
   }
 
   private boolean doTrackingAreaUpdate(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
-      String ueID = ueIDsAsList.get(ueIDindex);
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
+    } finally {
+      rLock.unlock();
+    }
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
@@ -610,17 +616,18 @@ public class GeodeWorkload extends Workload {
       long end = System.currentTimeMillis();
       _measurements.measure(TAU_OPERATION, (int) (end - start));
       _measurements.measureIntended(TAU_OPERATION, (int) (end - start));
-    } finally {
-      rLock.unlock();
-    }
+
     return true;
   }
 
   private boolean doS1release(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
-      String ueID = ueIDsAsList.get(ueIDindex);
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
+    } finally {
+      rLock.unlock();
+    }
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
@@ -631,17 +638,18 @@ public class GeodeWorkload extends Workload {
       long end = System.currentTimeMillis();
       _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start));
       _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start));
-    } finally {
-      rLock.unlock();
-    }
+
     return true;
   }
 
   private boolean doServiceRequest(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
-      String ueID = ueIDsAsList.get(ueIDindex);
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
+    } finally {
+      rLock.unlock();
+    }
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
@@ -652,17 +660,18 @@ public class GeodeWorkload extends Workload {
       long end = System.currentTimeMillis();
       _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start));
       _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start));
-    } finally {
-      rLock.unlock();
-    }
+
     return true;
   }
 
   private boolean doDetach(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
-      String ueID = ueIDsAsList.get(ueIDindex);
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
+    } finally {
+      rLock.unlock();
+    }
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
@@ -673,17 +682,18 @@ public class GeodeWorkload extends Workload {
       long end = System.currentTimeMillis();
       _measurements.measure(DETACH_OPERATION, (int) (end - start));
       _measurements.measureIntended(DETACH_OPERATION, (int) (end - start));
-    } finally {
-      rLock.unlock();
-    }
+
     return true;
   }
 
   private boolean doInitialAttach(Object threadstate) {
+    String ueID;
     rLock.lock();
     try {
-      int ueIDindex = random.nextInt(ueIDsAsList.size());
-      String ueID = ueIDsAsList.get(ueIDindex);
+      ueID = ueIDsAsList.get(random.nextInt(ueIDsAsListSize));
+    } finally {
+      rLock.unlock();
+    }
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
@@ -694,9 +704,7 @@ public class GeodeWorkload extends Workload {
       long end = System.currentTimeMillis();
       _measurements.measure(ATTACH_OPERATION, (int) (end - start));
       _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start));
-    } finally {
-      rLock.unlock();
-    }
+
     return true;
   }
 
