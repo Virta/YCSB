@@ -6,6 +6,7 @@ max_servers=$3
 threads=$4
 exp=
 server_list=
+HACs=
 
 function run_benchmark {
    while read server HACs servers; do
