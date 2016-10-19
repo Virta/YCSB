@@ -395,7 +395,7 @@ public class GeodeWorkload extends Workload {
 //    } catch (IOException e) {
 //      System.out.println("Could not open file for writing: " + e.getMessage());
 //    }
-    return this;
+    return myThreadId;
   }
 
   private Region<String, UE> getHACregion(String poolName, String table) {
