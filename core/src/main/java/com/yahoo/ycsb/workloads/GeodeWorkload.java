@@ -585,6 +585,7 @@ public class GeodeWorkload extends Workload {
         try {
           ueHAC.destroy(ueID);
           ueIDsAsList.remove(ueID);
+          ueIDsAsListSize--;
         } finally {
           wLock.unlock();
         }
