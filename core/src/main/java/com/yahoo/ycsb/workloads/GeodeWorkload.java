@@ -395,7 +395,7 @@ public class GeodeWorkload extends Workload {
 //    } catch (IOException e) {
 //      System.out.println("Could not open file for writing: " + e.getMessage());
 //    }
-    return null;
+    return this;
   }
 
   private Region<String, UE> getHACregion(String poolName, String table) {
@@ -431,7 +431,7 @@ public class GeodeWorkload extends Workload {
 //    } catch (IOException e) {
 //      e.printStackTrace();
 //    }
-    cache.close();
+//    cache.close();
   }
 
   @Override
@@ -449,11 +449,11 @@ public class GeodeWorkload extends Workload {
     return (status == Status.OK);
   }
 
+
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
     getRegionKeyData();
-
-    if (HACzoning && (ueIDsAsList.size() / originalUEIDlistSize) < 0.9 || firstTransaction) {
+    if (HACzoning && (ueIDsAsList.size()*1.0 / originalUEIDlistSize) < 0.9 || firstTransaction) {
       firstTransaction = false;
       Set<String> keySetOnServer = ueHAC.keySetOnServer();
       ueIDsAsList = new ArrayList<>();
@@ -554,7 +554,7 @@ public class GeodeWorkload extends Workload {
       nextHACzone.put(ueID, ue);
       ueRegion.put(ueID, ue);
       ueHAC.remove(ueID);
-      nextHACzone.close();
+//      nextHACzone.close();
     } else {
       ueHAC.put(ueID, ue);
     }
