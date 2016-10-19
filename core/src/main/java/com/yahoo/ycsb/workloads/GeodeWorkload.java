@@ -609,7 +609,7 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue != null) return false;
+      if (ue == null) return false;
       ue.tracking_area_update();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -631,7 +631,7 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue != null) return false;
+      if (ue == null) return false;
       ue.S1_release();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -653,7 +653,7 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue != null) return false;
+      if (ue == null) return false;
       ue.service_request();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -675,7 +675,7 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue != null) return false;
+      if (ue == null) return false;
       ue.detach();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -697,7 +697,7 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue != null) return false;
+      if (ue == null) return false;
       ue.initial_attach();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
