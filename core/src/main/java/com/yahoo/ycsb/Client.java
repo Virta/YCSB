@@ -388,7 +388,7 @@ class ClientThread implements Runnable
    * @param targetperthreadperms target number of operations per thread per ms
    * @param completeLatch The latch tracking the completion of all clients.
    */
-  public ClientThread(DB db, boolean dotransactions, Workload workload, Properties props, int opcount, double targetperthreadperms, CountDownLatch completeLatch)
+  public ClientThread(DB db, boolean dotransactions, Workload workload, Properties props, int opcount, double targetperthreadperms, CountDownLatch completeLatch, int threadid)
   {
     _db=db;
     _dotransactions=dotransactions;
@@ -403,6 +403,7 @@ class ClientThread implements Runnable
     _measurements = Measurements.getMeasurements();
     _spinSleep = Boolean.valueOf(_props.getProperty("spin.sleep", "false"));
     _completeLatch=completeLatch;
+    _threadid = threadid;
   }
 
   public int getOpsDone()
@@ -1073,7 +1074,7 @@ public class Client
           ++threadopcount;
         }
 
-        ClientThread t=new ClientThread(db,dotransactions,workload,props,threadopcount, targetperthreadperms, completeLatch);
+        ClientThread t=new ClientThread(db,dotransactions,workload,props,threadopcount, targetperthreadperms, completeLatch, threadid);
 
         clients.add(t);
       }
