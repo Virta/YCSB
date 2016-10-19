@@ -3,14 +3,15 @@
 start=$1
 increment=$2
 max_servers=$3
-threads=$4
+st_threads=$4
+threads=$5
 exp=
 server_list=
 HACs=
 
 function run_benchmark {
    while read server HACs servers; do
-	for th_counter in $(seq 1 $increment $threads); do
+	for th_counter in $(seq $st_threads $increment $threads); do
 		num_servers=0
                 for host in $servers; do
                         num_servers=$((num_servers+1))
@@ -32,7 +33,7 @@ function run_benchmark {
    done <<< $@
 }
 
-while read s inc m t servers; do
+while read s inc m mt t servers; do
 	server_list=$servers
 	HACs=$(echo $servers | wc -w)
 	exp=E$HACs
