@@ -13,6 +13,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created by frojala on 16/08/16.
@@ -269,6 +272,9 @@ public class GeodeWorkload extends Workload {
   DistributionLocatorId locator;
   int originalUEIDlistSize;
   boolean firstTransaction = true;
+  ReadWriteLock lock;
+  Lock rLock;
+  Lock wLock;
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -345,7 +351,9 @@ public class GeodeWorkload extends Workload {
     insertionRetryInterval = Integer.parseInt(p.getProperty(INSERTION_RETRY_INTERVAL, INSERTION_RETRY_INTERVAL_DEFAULT));
     random = new Random();
     random.setSeed(System.currentTimeMillis());
-
+    lock = new ReentrantReadWriteLock();
+    rLock = lock.readLock();
+    wLock = lock.writeLock();
   }
 
   @Override
@@ -452,12 +460,12 @@ public class GeodeWorkload extends Workload {
 
   @Override
   public boolean doTransaction(DB db, Object threadstate) {
-    getRegionKeyData();
-    if (HACzoning && (ueIDsAsList.size()*1.0 / originalUEIDlistSize) < 0.9 || firstTransaction) {
-      firstTransaction = false;
-      Set<String> keySetOnServer = ueHAC.keySetOnServer();
-      ueIDsAsList = new ArrayList<>();
-      ueIDsAsList.addAll(keySetOnServer);
+    if (HACzoning) {
+      if (ueIDsAsList == null || (ueIDsAsList.size()*1.0 / originalUEIDlistSize) < 0.9) {
+        updateHACKeyData();
+      }
+    } else {
+      getRegionKeyData();
     }
 
     switch (operationchooser.nextString()) {
@@ -484,161 +492,211 @@ public class GeodeWorkload extends Workload {
     }
   }
 
-  private synchronized void getRegionKeyData() {
+  private void updateHACKeyData() {
+    wLock.lock();
+    try {
+      Set<String> keySetOnServer = ueHAC.keySetOnServer();
+      ueIDsAsList = new ArrayList<>();
+      ueIDsAsList.addAll(keySetOnServer);
+    } finally {
+      wLock.unlock();
+    }
+  }
+
+  private void getRegionKeyData() {
     if (ueIDsAsList == null) {
+      wLock.lock();
       try {
         if (HACzoning) ueIDsAsList = Files.readAllLines(Paths.get(outfilepath + "_" + HACgroupNumber), Charset.defaultCharset());
         else ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
+        originalUEIDlistSize = ueIDsAsList.size();
       } catch (Exception e) {
         System.out.println("Could not read from ueID file: " + e.getMessage());
+      } finally {
+        wLock.unlock();
       }
-      originalUEIDlistSize = ueIDsAsList.size();
     }
   }
 
   private boolean doSessionManagement(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue == null) return false;
       ue.session_management();
+      ueHAC.put(ueID, ue);
+      if (HACzoning) ueRegion.put(ueID, ue);
+      long end = System.currentTimeMillis();
+      _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
+      _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
-    long end = System.currentTimeMillis();
-    _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
-    _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
     return true;
   }
 
   private boolean doCellReSelection(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue == null) return false;
       ue.cell_reselect();
+      ueHAC.put(ueID, ue);
+      if (HACzoning) ueRegion.put(ueID, ue);
+      long end = System.currentTimeMillis();
+      _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start));
+      _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
-    long end = System.currentTimeMillis();
-    _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start));
-    _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start));
     return true;
   }
 
   private boolean doHandover(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    int nextHACzoneNumber = HACgroupNumber;
-    while (nextHACzoneNumber == HACgroupNumber) nextHACzoneNumber = random.nextInt(maxHACzones) + 1;
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      int nextHACzoneNumber = HACgroupNumber;
+      while (nextHACzoneNumber == HACgroupNumber) nextHACzoneNumber = random.nextInt(maxHACzones) + 1;
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue == null) return false;
       ue.handover();
+      if (HACzoning) {
+        Region<String, UE> nextHACzone = getHACregion(groupNameBase + nextHACzoneNumber, table + "_" + nextHACzoneNumber);
+        nextHACzone.put(ueID, ue);
+        ueRegion.put(ueID, ue);
+        wLock.lock();
+        try {
+          ueHAC.destroy(ueID);
+          ueIDsAsList.remove(ueID);
+        } finally {
+          wLock.unlock();
+        }
+      } else {
+        ueHAC.put(ueID, ue);
+      }
+      long end = System.currentTimeMillis();
+      _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
+      _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    if (HACzoning) {
-      Region<String, UE> nextHACzone = getHACregion(groupNameBase + nextHACzoneNumber, table + "_" + nextHACzoneNumber);
-      nextHACzone.put(ueID, ue);
-      ueRegion.put(ueID, ue);
-      ueHAC.remove(ueID);
-//      nextHACzone.close();
-    } else {
-      ueHAC.put(ueID, ue);
-    }
-    long end = System.currentTimeMillis();
-    _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
-    _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
-    ueIDsAsList.remove(ueID);
     return true;
   }
 
   private boolean doTrackingAreaUpdate(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue != null) return false;
       ue.tracking_area_update();
+      ueHAC.put(ueID, ue);
+      if (HACzoning) ueRegion.put(ueID, ue);
+      long end = System.currentTimeMillis();
+      _measurements.measure(TAU_OPERATION, (int) (end - start));
+      _measurements.measureIntended(TAU_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
-    long end = System.currentTimeMillis();
-    _measurements.measure(TAU_OPERATION, (int) (end - start));
-    _measurements.measureIntended(TAU_OPERATION, (int) (end - start));
     return true;
   }
 
   private boolean doS1release(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue != null) return false;
       ue.S1_release();
+      ueHAC.put(ueID, ue);
+      if (HACzoning) ueRegion.put(ueID, ue);
+      long end = System.currentTimeMillis();
+      _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start));
+      _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
-    long end = System.currentTimeMillis();
-    _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start));
-    _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start));
     return true;
   }
 
   private boolean doServiceRequest(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue != null) return false;
       ue.service_request();
+      ueHAC.put(ueID, ue);
+      if (HACzoning) ueRegion.put(ueID, ue);
+      long end = System.currentTimeMillis();
+      _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start));
+      _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
-    long end = System.currentTimeMillis();
-    _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start));
-    _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start));
     return true;
   }
 
   private boolean doDetach(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue != null) return false;
       ue.detach();
+      ueHAC.put(ueID, ue);
+      if (HACzoning) ueRegion.put(ueID, ue);
+      long end = System.currentTimeMillis();
+      _measurements.measure(DETACH_OPERATION, (int) (end - start));
+      _measurements.measureIntended(DETACH_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
-    long end = System.currentTimeMillis();
-    _measurements.measure(DETACH_OPERATION, (int) (end - start));
-    _measurements.measureIntended(DETACH_OPERATION, (int) (end - start));
     return true;
   }
 
   private boolean doInitialAttach(Object threadstate) {
-    int ueIDindex = random.nextInt(ueIDsAsList.size());
-    String ueID = ueIDsAsList.get(ueIDindex);
-    long start = System.currentTimeMillis();
-    Object obj = ueHAC.get(ueID);
-    UE ue = (UE) CopyHelper.copy(obj);
-    if (ue != null) {
+    rLock.lock();
+    try {
+      int ueIDindex = random.nextInt(ueIDsAsList.size());
+      String ueID = ueIDsAsList.get(ueIDindex);
+      long start = System.currentTimeMillis();
+      Object obj = ueHAC.get(ueID);
+      UE ue = (UE) CopyHelper.copy(obj);
+      if (ue != null) return false;
       ue.initial_attach();
+      ueHAC.put(ueID, ue);
+      if (HACzoning) ueRegion.put(ueID, ue);
+      long end = System.currentTimeMillis();
+      _measurements.measure(ATTACH_OPERATION, (int) (end - start));
+      _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start));
+    } finally {
+      rLock.unlock();
     }
-    ueHAC.put(ueID, ue);
-    if (HACzoning) ueRegion.put(ueID, ue);
-    long end = System.currentTimeMillis();
-    _measurements.measure(ATTACH_OPERATION, (int) (end - start));
-    _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start));
     return true;
   }
 
