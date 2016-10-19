@@ -462,36 +462,26 @@ public class GeodeWorkload extends Workload {
 
     switch (operationchooser.nextString()) {
       case ATTACH_OPERATION:
-        doInitialAttach();
-        break;
+        return doInitialAttach(threadstate);
       case DETACH_OPERATION:
-        doDetach();
-        break;
+        return doDetach(threadstate);
       case SERVICE_REQUEST_OPERATION:
-        doServiceRequest();
-        break;
+        return doServiceRequest(threadstate);
       case S1_RELEASE_OPERATION:
-        doS1release();
-        break;
+        return doS1release(threadstate);
       case TAU_OPERATION:
-        doTrackingAreaUpdate();
-        break;
+        return doTrackingAreaUpdate(threadstate);
       case HANDOVER_OPERATION:
-        doHandover();
-        break;
+        return doHandover(threadstate);
       case CELL_RESELECT_OPERATION:
-        doCellReSelection();
-        break;
+        return doCellReSelection(threadstate);
       case SESSION_MANAGEMENT_OPERATION:
-        doSessionManagement();
-        break;
+        return doSessionManagement(threadstate);
       case "INSERT":
-        doInsert(db, threadstate);
-        break;
+        return doInsert(db, threadstate);
       default:
-        doDetach();
+        return doDetach(threadstate);
     }
-    return true;
   }
 
   private synchronized void getRegionKeyData() {
@@ -506,7 +496,7 @@ public class GeodeWorkload extends Workload {
     }
   }
 
-  private void doSessionManagement() {
+  private boolean doSessionManagement(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -520,9 +510,10 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
     _measurements.measureIntended(SESSION_MANAGEMENT_OPERATION, (int) (end - start));
+    return true;
   }
 
-  private void doCellReSelection() {
+  private boolean doCellReSelection(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -536,9 +527,10 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(CELL_RESELECT_OPERATION, (int) (end - start));
     _measurements.measureIntended(CELL_RESELECT_OPERATION, (int) (end - start));
+    return true;
   }
 
-  private void doHandover() {
+  private boolean doHandover(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     int nextHACzoneNumber = HACgroupNumber;
     while (nextHACzoneNumber == HACgroupNumber) nextHACzoneNumber = random.nextInt(maxHACzones) + 1;
@@ -562,9 +554,10 @@ public class GeodeWorkload extends Workload {
     _measurements.measure(HANDOVER_OPERATION, (int) (end - start));
     _measurements.measureIntended(HANDOVER_OPERATION, (int) (end - start));
     ueIDsAsList.remove(ueID);
+    return true;
   }
 
-  private void doTrackingAreaUpdate() {
+  private boolean doTrackingAreaUpdate(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -578,9 +571,10 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(TAU_OPERATION, (int) (end - start));
     _measurements.measureIntended(TAU_OPERATION, (int) (end - start));
+    return true;
   }
 
-  private void doS1release() {
+  private boolean doS1release(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -594,9 +588,10 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(S1_RELEASE_OPERATION, (int) (end - start));
     _measurements.measureIntended(S1_RELEASE_OPERATION, (int) (end - start));
+    return true;
   }
 
-  private void doServiceRequest() {
+  private boolean doServiceRequest(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -610,9 +605,10 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(SERVICE_REQUEST_OPERATION, (int) (end - start));
     _measurements.measureIntended(SERVICE_REQUEST_OPERATION, (int) (end - start));
+    return true;
   }
 
-  private void doDetach() {
+  private boolean doDetach(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -626,9 +622,10 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(DETACH_OPERATION, (int) (end - start));
     _measurements.measureIntended(DETACH_OPERATION, (int) (end - start));
+    return true;
   }
 
-  private void doInitialAttach() {
+  private boolean doInitialAttach(Object threadstate) {
     int ueIDindex = random.nextInt(ueIDsAsList.size());
     String ueID = ueIDsAsList.get(ueIDindex);
     long start = System.currentTimeMillis();
@@ -642,6 +639,7 @@ public class GeodeWorkload extends Workload {
     long end = System.currentTimeMillis();
     _measurements.measure(ATTACH_OPERATION, (int) (end - start));
     _measurements.measureIntended(ATTACH_OPERATION, (int) (end - start));
+    return true;
   }
 
 
