@@ -20,7 +20,7 @@ for to_start in $(seq $start $max_servers); do
        	        -e "connect" -e "start server \
        		--name=serv-$host-$to_start \
                 --server-port=$server_port \
-       	        --classpath=/home/frojala/YCSB/core/target/archive-tmp/core-0.11.0-SNAPSHOT.jar
+       	        --classpath=/home/frojala/YCSB/core/target/archive-tmp/core-0.11.0-SNAPSHOT.jar \
 		--group=HAC-group_$hac_group"
 done
 
