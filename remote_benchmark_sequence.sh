@@ -10,16 +10,16 @@ server_list=
 HACs=
 
 function run_benchmark {
-   while read server HACs servers; do
+   while read server mHACs servers; do
 	for th_counter in $(seq $st_threads $increment $threads); do
 		num_servers=0
                 for host in $servers; do
                         num_servers=$((num_servers+1))
-                        ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $th_counter $server $num_servers $HACs" &
+                        ssh $host "/home/frojala/YCSB/benchmark_geode.sh /home/frojala/EXPERIMENTS/ $exp $th_counter $server $num_servers $mHACs" &
                 done
                 completed_servers=0
                 while [[ ! $completed_servers -eq $num_servers ]]; do
-			sleep 30
+ 			sleep 30
                         completed_servers=0
                         for host in $servers; do
                                 if ssh $host test -e "/home/frojala/EXPERIMENTS/$exp/$exp"S"$server/$exp"S"$server"_T"$th_counter/complete" ; then
