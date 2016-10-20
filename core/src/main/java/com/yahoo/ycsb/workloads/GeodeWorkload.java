@@ -499,6 +499,7 @@ public class GeodeWorkload extends Workload {
       Set<String> keySetOnServer = ueHAC.keySetOnServer();
       ueIDsAsList = new ArrayList<>();
       ueIDsAsList.addAll(keySetOnServer);
+      originalUEIDlistSize = ueIDsAsList.size();
       ueIDsAsListSize = ueIDsAsList.size();
     } finally {
       wLock.unlock();
