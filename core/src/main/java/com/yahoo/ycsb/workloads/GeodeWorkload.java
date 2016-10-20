@@ -512,6 +512,7 @@ public class GeodeWorkload extends Workload {
         if (HACzoning) ueIDsAsList = Files.readAllLines(Paths.get(outfilepath + "_" + HACgroupNumber), Charset.defaultCharset());
         else ueIDsAsList = Files.readAllLines(Paths.get(outfilepath), Charset.defaultCharset());
         originalUEIDlistSize = ueIDsAsList.size();
+        ueIDsAsListSize = ueIDsAsList.size();
       } catch (Exception e) {
         System.out.println("Could not read from ueID file: " + e.getMessage());
       } finally {
