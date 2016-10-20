@@ -544,7 +544,7 @@ public class GeodeWorkload extends Workload {
     UE ue = (UE) CopyHelper.copy(obj);
     if (ue == null) {
       removeKey(ueID);
-      return false;
+      return true;
     }
     ue.session_management();
     ueHAC.put(ueID, ue);
@@ -568,7 +568,7 @@ public class GeodeWorkload extends Workload {
       UE ue = (UE) CopyHelper.copy(obj);
       if (ue == null) {
         removeKey(ueID);
-        return false;
+        return true;
       }
       ue.cell_reselect();
       ueHAC.put(ueID, ue);
@@ -594,7 +594,7 @@ public class GeodeWorkload extends Workload {
       UE ue = (UE) CopyHelper.copy(obj);
       if (ue == null) {
         removeKey(ueID);
-        return false;
+        return true;
       }
       ue.handover();
       if (HACzoning) {
@@ -636,7 +636,7 @@ public class GeodeWorkload extends Workload {
       UE ue = (UE) CopyHelper.copy(obj);
       if (ue == null) {
         removeKey(ueID);
-        return false;
+        return true;
       }
       ue.tracking_area_update();
       ueHAC.put(ueID, ue);
@@ -661,7 +661,7 @@ public class GeodeWorkload extends Workload {
       UE ue = (UE) CopyHelper.copy(obj);
       if (ue == null) {
         removeKey(ueID);
-        return false;
+        return true;
       }
       ue.S1_release();
       ueHAC.put(ueID, ue);
@@ -686,7 +686,7 @@ public class GeodeWorkload extends Workload {
       UE ue = (UE) CopyHelper.copy(obj);
       if (ue == null) {
         removeKey(ueID);
-        return false;
+        return true;
       }
       ue.service_request();
       ueHAC.put(ueID, ue);
@@ -711,7 +711,7 @@ public class GeodeWorkload extends Workload {
       UE ue = (UE) CopyHelper.copy(obj);
       if (ue == null) {
         removeKey(ueID);
-        return false;
+        return true;
       }
       ue.detach();
       ueHAC.put(ueID, ue);
@@ -736,7 +736,7 @@ public class GeodeWorkload extends Workload {
       UE ue = (UE) CopyHelper.copy(obj);
       if (ue == null) {
         removeKey(ueID);
-        return false;
+        return true;
       }
       ue.initial_attach();
       ueHAC.put(ueID, ue);
