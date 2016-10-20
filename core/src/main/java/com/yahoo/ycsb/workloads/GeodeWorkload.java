@@ -241,7 +241,7 @@ public class GeodeWorkload extends Workload {
   private static final String HAC_GROUP_NUMBER_DEFAULT = "-1";
 
   private static final String MAX_HAC_GROUPS = "geode.maxHACgroups";
-  private static final String MAX_HAC_GROUPS_DEFAULT = "0";
+  private static final String MAX_HAC_GROUPS_DEFAULT = "1";
 
   private GemFireCache cache;
 
@@ -520,6 +520,16 @@ public class GeodeWorkload extends Workload {
     }
   }
 
+  private void removeKey(String key) {
+    wLock.lock();
+    try {
+      ueIDsAsList.remove(key);
+      ueIDsAsListSize--;
+    } finally {
+      wLock.unlock();
+    }
+  }
+
   private boolean doSessionManagement(Object threadstate) {
     String ueID;
     rLock.lock();
@@ -531,7 +541,10 @@ public class GeodeWorkload extends Workload {
     long start = System.currentTimeMillis();
     Object obj = ueHAC.get(ueID);
     UE ue = (UE) CopyHelper.copy(obj);
-    if (ue == null) return false;
+    if (ue == null) {
+      removeKey(ueID);
+      return false;
+    }
     ue.session_management();
     ueHAC.put(ueID, ue);
     if (HACzoning) ueRegion.put(ueID, ue);
@@ -552,7 +565,10 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
+      if (ue == null) {
+        removeKey(ueID);
+        return false;
+      }
       ue.cell_reselect();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -575,11 +591,18 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
+      if (ue == null) {
+        removeKey(ueID);
+        return false;
+      }
       ue.handover();
       if (HACzoning) {
         Region<String, UE> nextHACzone = getHACregion(groupNameBase + nextHACzoneNumber, table + "_" + nextHACzoneNumber);
-        nextHACzone.put(ueID, ue);
+        try {
+          nextHACzone.put(ueID, ue);
+        } catch (Exception e) {
+          System.out.println(e.getMessage());
+        }
         ueRegion.put(ueID, ue);
         wLock.lock();
         try {
@@ -610,7 +633,10 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
+      if (ue == null) {
+        removeKey(ueID);
+        return false;
+      }
       ue.tracking_area_update();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -632,7 +658,10 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
+      if (ue == null) {
+        removeKey(ueID);
+        return false;
+      }
       ue.S1_release();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -654,7 +683,10 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
+      if (ue == null) {
+        removeKey(ueID);
+        return false;
+      }
       ue.service_request();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -676,7 +708,10 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
+      if (ue == null) {
+        removeKey(ueID);
+        return false;
+      }
       ue.detach();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
@@ -698,7 +733,10 @@ public class GeodeWorkload extends Workload {
       long start = System.currentTimeMillis();
       Object obj = ueHAC.get(ueID);
       UE ue = (UE) CopyHelper.copy(obj);
-      if (ue == null) return false;
+      if (ue == null) {
+        removeKey(ueID);
+        return false;
+      }
       ue.initial_attach();
       ueHAC.put(ueID, ue);
       if (HACzoning) ueRegion.put(ueID, ue);
