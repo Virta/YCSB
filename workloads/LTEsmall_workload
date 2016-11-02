@@ -73,8 +73,8 @@ service_request_proportion=0.31
 s1_release_proportion=0.31
 tau_proportion=0.09
 handover_proportion=0.12
-cell_reselect_proportion=0.7
-session_management_proportion=0.7
+cell_reselect_proportion=0.07
+session_management_proportion=0.07
 
 geode.locator=localhost[10334]
 
